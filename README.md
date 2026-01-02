@@ -1,4 +1,4 @@
-# quify
+# Quify
 
 A new Flutter project.
 
