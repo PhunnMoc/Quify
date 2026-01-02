@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "149317741991",
+    "firebase_url": "https://quify-bb724-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "quify-bb724",
+    "storage_bucket": "quify-bb724.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:149317741991:android:efe8c95feb2d531e855a82",
+        "android_client_info": {
+          "package_name": "com.example.quify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpS-6Tn3BkfFPT5GoRVqFYDKXlpHD4VR0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
