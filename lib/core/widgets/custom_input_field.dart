@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomInputField extends StatelessWidget {
   final String label;
@@ -11,6 +12,9 @@ class CustomInputField extends StatelessWidget {
   final Widget? suffixIcon;
   final int? maxLines;
   final void Function(String)? onChanged;
+  final bool enabled;
+  final TextCapitalization? textCapitalization;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomInputField({
     super.key,
@@ -24,6 +28,9 @@ class CustomInputField extends StatelessWidget {
     this.suffixIcon,
     this.maxLines = 1,
     this.onChanged,
+    this.enabled = true,
+    this.textCapitalization,
+    this.inputFormatters,
   });
 
   @override
@@ -35,6 +42,9 @@ class CustomInputField extends StatelessWidget {
       keyboardType: keyboardType,
       maxLines: maxLines,
       onChanged: onChanged,
+      enabled: enabled,
+      textCapitalization: textCapitalization ?? TextCapitalization.none,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -44,4 +54,3 @@ class CustomInputField extends StatelessWidget {
     );
   }
 }
-

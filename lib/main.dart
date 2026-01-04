@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quify/core/bindings/initial_binding.dart';
 import 'package:quify/core/theme/app_theme.dart';
+import 'package:quify/features/auth/data/repositories/auth_repository.dart';
 import 'package:quify/firebase_options.dart';
 import 'package:quify/routes/app_pages.dart';
 import 'package:quify/routes/app_routes.dart';
@@ -19,27 +20,95 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Quify',
-      debugShowCheckedModeBanner: false, // Bỏ banner debug
-      theme: AppTheme.lightTheme,
-      initialBinding: InitialBinding(),
-      initialRoute: _getInitialRoute(),
-      getPages: AppPages.routes,
-    );
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String initialRoute = AppRoutes.login;
+  bool isInitializing = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _determineInitialRoute();
   }
 
-  String _getInitialRoute() {
-    // Check if user is already logged in
+  Future<void> _determineInitialRoute() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      return AppRoutes.home;
+    if (user == null) {
+      setState(() {
+        initialRoute = AppRoutes.login;
+        isInitializing = false;
+      });
+      return;
     }
-    return AppRoutes.login;
+
+    final authRepository = AuthRepository();
+    
+    // Reload user để lấy trạng thái mới nhất
+    await authRepository.reloadUser();
+    final refreshedUser = FirebaseAuth.instance.currentUser;
+    
+    if (refreshedUser == null) {
+      setState(() {
+        initialRoute = AppRoutes.login;
+        isInitializing = false;
+      });
+      return;
+    }
+
+    // Kiểm tra email verification trước
+    if (!refreshedUser.emailVerified) {
+      setState(() {
+        initialRoute = AppRoutes.emailVerification;
+        isInitializing = false;
+      });
+      return;
+    }
+
+    // Kiểm tra profile setup
+    final userData = await authRepository.getUserData(refreshedUser.uid);
+    if (userData == null || userData['isSetupProfile'] != true) {
+      setState(() {
+        initialRoute = AppRoutes.setupProfile;
+        isInitializing = false;
+      });
+      return;
+    }
+
+    // User đã verified và setup profile, cho phép vào home
+    setState(() {
+      initialRoute = AppRoutes.home;
+      isInitializing = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isInitializing) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(
+              color: AppTheme.primaryColor,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return GetMaterialApp(
+      title: 'Quify',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      initialBinding: InitialBinding(),
+      initialRoute: initialRoute,
+      getPages: AppPages.routes,
+    );
   }
 }

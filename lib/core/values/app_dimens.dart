@@ -32,4 +32,3 @@ class AppDimens {
   // Input Height
   static const double inputHeight = 50.0;
 }
-

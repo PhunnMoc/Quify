@@ -27,7 +27,7 @@ class CustomButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final buttonHeight = height ?? AppDimens.buttonHeight;
-    
+
     if (isOutlined) {
       return SizedBox(
         width: width ?? double.infinity,
@@ -47,9 +47,7 @@ class CustomButton extends StatelessWidget {
                 )
               : Text(
                   text,
-                  style: TextStyle(
-                    color: textColor ?? AppTheme.primaryColor,
-                  ),
+                  style: TextStyle(color: textColor ?? AppTheme.primaryColor),
                 ),
         ),
       );
@@ -72,14 +70,8 @@ class CustomButton extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : Text(
-                text,
-                style: TextStyle(
-                  color: textColor ?? Colors.white,
-                ),
-              ),
+            : Text(text, style: TextStyle(color: textColor ?? Colors.white)),
       ),
     );
   }
 }
-

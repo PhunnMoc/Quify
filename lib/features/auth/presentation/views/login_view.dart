@@ -42,13 +42,18 @@ class LoginView extends GetView<AuthController> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 60),
-                // Email Field
+                // Email/Username Field
                 CustomInputField(
-                  label: AppStrings.email,
+                  label: 'Email hoặc ${AppStrings.username}',
                   controller: controller.emailController,
-                  validator: Validators.email,
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: const Icon(Icons.email_outlined),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập email hoặc tên đăng nhập';
+                    }
+                    return null;
+                  },
+                  keyboardType: TextInputType.text,
+                  prefixIcon: const Icon(Icons.person_outlined),
                 ),
                 const SizedBox(height: AppDimens.marginM),
                 // Password Field

@@ -1,10 +1,9 @@
 import 'package:get/get.dart';
+import 'package:quify/features/auth/controller/auth_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
-    // Add global bindings here
-    // AuthBinding is loaded per route, but can be added here if needed globally
+    Get.put<AuthController>(AuthController(), permanent: true);
   }
 }
-
