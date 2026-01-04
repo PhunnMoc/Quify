@@ -38,7 +38,7 @@ class _HomeViewState extends State<HomeView> {
     // Reload user để lấy trạng thái mới nhất
     await authRepository.reloadUser();
     final refreshedUser = FirebaseAuth.instance.currentUser;
-    
+
     if (refreshedUser == null) {
       Get.offAllNamed(AppRoutes.login);
       return;
@@ -66,9 +66,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     if (_isChecking) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return _HomeViewContent();
@@ -89,7 +87,8 @@ class _HomeViewContent extends GetView<HomeController> {
 
     return Scaffold(
       body: Obx(
-        () => IndexedStack(index: controller.currentIndex.value, children: tabs),
+        () =>
+            IndexedStack(index: controller.currentIndex.value, children: tabs),
       ),
       bottomNavigationBar: Obx(
         () => Stack(

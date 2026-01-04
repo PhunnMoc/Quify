@@ -7,4 +7,3 @@ class HomeController extends GetxController {
     currentIndex.value = index;
   }
 }
-

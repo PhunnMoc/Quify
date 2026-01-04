@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 
+/// Application theme configuration
+/// Defines colors, text styles, and Material 3 theme for the quiz app
 class AppTheme {
-  // Colors - Vibrant and fun theme for quiz app
-  static const Color primaryColor = Color(0xFF6366F1); // Indigo
-  static const Color secondaryColor = Color(0xFF8B5CF6); // Purple
-  static const Color accentColor = Color(0xFFEC4899); // Pink
-  static const Color successColor = Color(0xFF10B981); // Green
-  static const Color errorColor = Color(0xFFEF4444); // Red
-  static const Color warningColor = Color(0xFFF59E0B); // Amber
+  static const Color primaryColor = Color(0xFF6366F1);
+  static const Color secondaryColor = Color(0xFF8B5CF6);
+  static const Color accentColor = Color(0xFFEC4899);
+  static const Color successColor = Color(0xFF10B981);
+  static const Color errorColor = Color(0xFFEF4444);
+  static const Color warningColor = Color(0xFFF59E0B);
   static const Color backgroundColor = Color(0xFFF9FAFB);
   static const Color surfaceColor = Colors.white;
   static const Color textPrimary = Color(0xFF1F2937);
   static const Color textSecondary = Color(0xFF6B7280);
 
+  /// Returns Material 3 light theme configuration
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,

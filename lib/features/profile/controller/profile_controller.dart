@@ -57,7 +57,7 @@ class ProfileController extends GetxController {
 
   Future<void> checkUsername(String username) async {
     if (username.length < 3) return;
-    
+
     // Don't check if it's the current username
     if (username == userData?['username']) return;
 
@@ -144,4 +144,3 @@ class ProfileController extends GetxController {
     super.onClose();
   }
 }
-

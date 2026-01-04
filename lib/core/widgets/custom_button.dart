@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_dimens.dart';
 
+/// Reusable button widget with loading state support
+/// Supports both elevated and outlined button styles
 class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;

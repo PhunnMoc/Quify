@@ -10,13 +10,8 @@ import 'package:quify/routes/app_pages.dart';
 import 'package:quify/routes/app_routes.dart';
 
 void main() async {
-  // 1. Đảm bảo Binding được khởi tạo trước khi gọi code bất đồng bộ
   WidgetsFlutterBinding.ensureInitialized();
-
-  // 2. Khởi tạo Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // 3. Chạy App sau khi kết nối thành công
   runApp(const MyApp());
 }
 
@@ -37,6 +32,7 @@ class _MyAppState extends State<MyApp> {
     _determineInitialRoute();
   }
 
+  /// Determines the initial route based on user authentication and profile status
   Future<void> _determineInitialRoute() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -48,11 +44,9 @@ class _MyAppState extends State<MyApp> {
     }
 
     final authRepository = AuthRepository();
-    
-    // Reload user để lấy trạng thái mới nhất
     await authRepository.reloadUser();
     final refreshedUser = FirebaseAuth.instance.currentUser;
-    
+
     if (refreshedUser == null) {
       setState(() {
         initialRoute = AppRoutes.login;
@@ -61,7 +55,6 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    // Kiểm tra email verification trước
     if (!refreshedUser.emailVerified) {
       setState(() {
         initialRoute = AppRoutes.emailVerification;
@@ -70,7 +63,6 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    // Kiểm tra profile setup
     final userData = await authRepository.getUserData(refreshedUser.uid);
     if (userData == null || userData['isSetupProfile'] != true) {
       setState(() {
@@ -80,7 +72,6 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    // User đã verified và setup profile, cho phép vào home
     setState(() {
       initialRoute = AppRoutes.home;
       isInitializing = false;
@@ -94,9 +85,7 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         home: Scaffold(
           body: Center(
-            child: CircularProgressIndicator(
-              color: AppTheme.primaryColor,
-            ),
+            child: CircularProgressIndicator(color: AppTheme.primaryColor),
           ),
         ),
       );

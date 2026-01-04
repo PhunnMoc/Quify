@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
+/// Provider for Firebase Authentication operations
+/// Handles direct interactions with Firebase Auth service
 class AuthProvider {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
@@ -23,13 +25,14 @@ class AuthProvider {
     );
   }
 
+  /// Sends email verification to the current user
+  /// Reloads user before sending to ensure fresh state
   Future<void> sendEmailVerification() async {
     final user = _firebaseAuth.currentUser;
     if (user == null) {
       throw Exception('Không tìm thấy người dùng');
     }
 
-    // Reload user to get latest emailVerified status
     await user.reload();
     final refreshedUser = _firebaseAuth.currentUser;
 
@@ -41,7 +44,6 @@ class AuthProvider {
       throw Exception('Email đã được xác thực');
     }
 
-    // Send email verification
     await refreshedUser.sendEmailVerification();
   }
 

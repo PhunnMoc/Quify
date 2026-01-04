@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// User data model representing user information stored in Firestore
 class UserModel {
   final String uid;
   final String email;
@@ -19,6 +20,8 @@ class UserModel {
     this.updatedAt,
   });
 
+  /// Converts UserModel to Map for Firestore storage
+  /// Converts DateTime to Timestamp for Firestore compatibility
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
@@ -31,6 +34,8 @@ class UserModel {
     };
   }
 
+  /// Creates UserModel from Firestore document data
+  /// Handles various DateTime formats (Timestamp, String, DateTime)
   factory UserModel.fromMap(Map<String, dynamic> map) {
     DateTime? parseDateTime(dynamic value) {
       if (value == null) return null;
@@ -81,4 +86,3 @@ class UserModel {
     );
   }
 }
-

@@ -10,6 +10,8 @@ import 'package:quify/features/profile/binding/profile_binding.dart';
 import 'package:quify/features/profile/presentation/views/edit_profile_view.dart';
 import 'package:quify/routes/app_routes.dart';
 
+/// Application route configuration
+/// Maps route names to their corresponding views and bindings
 class AppPages {
   static final List<GetPage> routes = [
     GetPage(

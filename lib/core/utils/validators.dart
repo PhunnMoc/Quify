@@ -1,4 +1,7 @@
+/// Validation utilities for form inputs
+/// Provides static methods for validating user input fields
 class Validators {
+  /// Validates email format
   static String? email(String? value) {
     if (value == null || value.isEmpty) {
       return 'Vui lòng nhập email';
@@ -10,6 +13,9 @@ class Validators {
     return null;
   }
 
+  /// Validates password strength
+  /// Requires: minimum 8 characters, at least one lowercase, one uppercase,
+  /// one number, and one special character
   static String? password(String? value) {
     if (value == null || value.isEmpty) {
       return 'Vui lòng nhập mật khẩu';
@@ -17,30 +23,27 @@ class Validators {
     if (value.length < 8) {
       return 'Mật khẩu phải có ít nhất 8 ký tự';
     }
-    
-    // Kiểm tra chữ cái thường
+
     if (!value.contains(RegExp(r'[a-z]'))) {
       return 'Mật khẩu phải có ít nhất 1 chữ cái thường';
     }
-    
-    // Kiểm tra chữ cái hoa
+
     if (!value.contains(RegExp(r'[A-Z]'))) {
       return 'Mật khẩu phải có ít nhất 1 chữ cái hoa';
     }
-    
-    // Kiểm tra số
+
     if (!value.contains(RegExp(r'[0-9]'))) {
       return 'Mật khẩu phải có ít nhất 1 chữ số';
     }
-    
-    // Kiểm tra ký tự đặc biệt
+
     if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
       return 'Mật khẩu phải có ít nhất 1 ký tự đặc biệt';
     }
-    
+
     return null;
   }
 
+  /// Validates password confirmation matches the original password
   static String? confirmPassword(String? value, String? password) {
     if (value == null || value.isEmpty) {
       return 'Vui lòng xác nhận mật khẩu';
@@ -51,6 +54,8 @@ class Validators {
     return null;
   }
 
+  /// Validates full name
+  /// Requires: 2-50 characters (suitable for Vietnamese names)
   static String? fullName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Vui lòng nhập họ và tên';
@@ -64,6 +69,8 @@ class Validators {
     return null;
   }
 
+  /// Validates username
+  /// Requires: 3-15 characters, alphanumeric only, must start with a letter
   static String? username(String? value) {
     if (value == null || value.isEmpty) {
       return 'Vui lòng nhập tên đăng nhập';
@@ -71,26 +78,21 @@ class Validators {
     if (value.length < 3) {
       return 'Tên đăng nhập phải có ít nhất 3 ký tự';
     }
-    if (value.length > 20) {
-      return 'Tên đăng nhập không được vượt quá 20 ký tự';
+    if (value.length > 15) {
+      return 'Tên đăng nhập không được vượt quá 15 ký tự';
     }
-    
-    // Chỉ cho phép chữ cái và số (không có ký tự đặc biệt)
+
+    // Must start with a letter
+    if (!value[0].contains(RegExp(r'[a-zA-Z]'))) {
+      return 'Tên đăng nhập phải bắt đầu bằng chữ cái';
+    }
+
+    // Only alphanumeric characters allowed
     final usernameRegex = RegExp(r'^[a-zA-Z0-9]+$');
     if (!usernameRegex.hasMatch(value)) {
       return 'Tên đăng nhập không được chứa ký tự đặc biệt';
     }
-    
-    // Phải có ít nhất 1 chữ cái
-    if (!value.contains(RegExp(r'[a-zA-Z]'))) {
-      return 'Tên đăng nhập phải có ít nhất 1 chữ cái';
-    }
-    
-    // Phải có ít nhất 1 số
-    if (!value.contains(RegExp(r'[0-9]'))) {
-      return 'Tên đăng nhập phải có ít nhất 1 chữ số';
-    }
-    
+
     return null;
   }
 }

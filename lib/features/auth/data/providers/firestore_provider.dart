@@ -1,24 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:quify/features/auth/data/models/user_model.dart';
 
+/// Provider for Firestore database operations
+/// Handles all user data interactions with Cloud Firestore
 class FirestoreProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _usersCollection = 'users';
 
-  // Create user document
+  /// Creates a new user document in Firestore
   Future<void> createUser(UserModel user) async {
     if (user.uid.isEmpty) {
       throw Exception('UID cannot be empty');
     }
     final data = user.toMap();
-    // Ensure createdAt is set if not provided
     if (data['createdAt'] == null) {
       data['createdAt'] = FieldValue.serverTimestamp();
     }
     await _firestore.collection(_usersCollection).doc(user.uid).set(data);
   }
 
-  // Get user by UID
+  /// Retrieves user data by UID
   Future<UserModel?> getUserByUid(String uid) async {
     if (uid.isEmpty) {
       return null;
@@ -30,26 +31,27 @@ class FirestoreProvider {
     return null;
   }
 
-  // Get user by username
+  /// Retrieves user data by username (case-insensitive)
+  /// Uses usernameLowercase field for efficient querying
   Future<UserModel?> getUserByUsername(String username) async {
     if (username.isEmpty) {
       return null;
     }
-    // Query users collection by usernameLowercase field (case-insensitive)
     final querySnapshot = await _firestore
         .collection(_usersCollection)
         .where('usernameLowercase', isEqualTo: username.toLowerCase())
         .limit(1)
         .get();
-    
+
     if (querySnapshot.docs.isEmpty) {
       return null;
     }
-    
+
     return UserModel.fromMap(querySnapshot.docs.first.data());
   }
 
-  // Get email by username
+  /// Gets email address associated with a username
+  /// Used for username-based login
   Future<String?> getEmailByUsername(String username) async {
     if (username.isEmpty) {
       return null;
@@ -58,12 +60,11 @@ class FirestoreProvider {
     return user?.email;
   }
 
-  // Check if username exists
+  /// Checks if a username already exists in the database
   Future<bool> usernameExists(String username) async {
     if (username.isEmpty) {
       return false;
     }
-    // Query users collection by usernameLowercase field (case-insensitive)
     final querySnapshot = await _firestore
         .collection(_usersCollection)
         .where('usernameLowercase', isEqualTo: username.toLowerCase())
@@ -72,12 +73,12 @@ class FirestoreProvider {
     return querySnapshot.docs.isNotEmpty;
   }
 
-  // Update user
+  /// Updates user document in Firestore
+  /// Automatically updates usernameLowercase when username is changed
   Future<void> updateUser(String uid, Map<String, dynamic> data) async {
     if (uid.isEmpty) {
       throw Exception('UID cannot be empty');
     }
-    // If username is being updated, also update usernameLowercase
     if (data.containsKey('username') && data['username'] != null) {
       data['usernameLowercase'] = (data['username'] as String).toLowerCase();
     }
@@ -85,7 +86,8 @@ class FirestoreProvider {
     await _firestore.collection(_usersCollection).doc(uid).update(data);
   }
 
-  // Setup profile (create user document)
+  /// Sets up user profile with full name and username
+  /// Creates usernameLowercase field for case-insensitive username queries
   Future<void> setupProfile({
     required String uid,
     required String email,
@@ -98,19 +100,17 @@ class FirestoreProvider {
     if (username.isEmpty) {
       throw Exception('Username cannot be empty');
     }
-    
-    // Create/update user document with username and usernameLowercase
+
     final userRef = _firestore.collection(_usersCollection).doc(uid);
     await userRef.set({
       'uid': uid,
       'email': email,
       'fullName': fullName,
       'username': username,
-      'usernameLowercase': username.toLowerCase(), // For case-insensitive queries
+      'usernameLowercase': username.toLowerCase(),
       'isSetupProfile': true,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 }
-

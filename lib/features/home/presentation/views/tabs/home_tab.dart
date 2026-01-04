@@ -23,13 +23,13 @@ class _HomeTabState extends State<HomeTab> {
 
   Future<void> _showWelcomeMessage() async {
     if (_hasShownWelcome) return;
-    
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final userData = await authRepository.getUserData(user.uid);
       if (userData != null && userData['username'] != null) {
         final username = userData['username'] as String;
-        
+
         // Luôn hiển thị thông báo chào mừng
         Get.snackbar(
           'Chào mừng',
@@ -39,7 +39,7 @@ class _HomeTabState extends State<HomeTab> {
           colorText: Colors.white,
           duration: const Duration(seconds: 3),
         );
-        
+
         _hasShownWelcome = true;
       }
     }
@@ -52,10 +52,7 @@ class _HomeTabState extends State<HomeTab> {
         child: Center(
           child: Text(
             AppStrings.home,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
       ),

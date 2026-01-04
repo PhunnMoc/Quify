@@ -11,14 +11,10 @@ class SearchTab extends StatelessWidget {
         child: Center(
           child: Text(
             AppStrings.search,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
       ),
     );
   }
 }
-

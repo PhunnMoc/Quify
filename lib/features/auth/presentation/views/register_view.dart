@@ -8,16 +8,29 @@ import 'package:quify/core/widgets/custom_button.dart';
 import 'package:quify/core/widgets/custom_input_field.dart';
 import 'package:quify/features/auth/controller/auth_controller.dart';
 
-class RegisterView extends GetView<AuthController> {
-  RegisterView({super.key});
+class RegisterView extends StatefulWidget {
+  const RegisterView({super.key});
+
+  @override
+  State<RegisterView> createState() => _RegisterViewState();
+}
+
+class _RegisterViewState extends State<RegisterView> {
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = Get.find<AuthController>();
+      controller.clearControllers();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.register),
-      ),
+      appBar: AppBar(title: const Text(AppStrings.register)),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -42,75 +55,77 @@ class RegisterView extends GetView<AuthController> {
                 const SizedBox(height: 8),
                 Text(
                   'Tham gia Quify và bắt đầu học tập vui vẻ!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
                 // Email Field
                 CustomInputField(
                   label: AppStrings.email,
-                  controller: controller.emailController,
+                  controller: Get.find<AuthController>().emailController,
                   validator: Validators.email,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
                 ),
                 const SizedBox(height: AppDimens.marginM),
                 // Password Field
-                Obx(
-                  () => CustomInputField(
+                Obx(() {
+                  final authController = Get.find<AuthController>();
+                  return CustomInputField(
                     label: AppStrings.password,
-                    controller: controller.passwordController,
+                    controller: authController.passwordController,
                     validator: Validators.password,
-                    obscureText: !controller.isPasswordVisible.value,
+                    obscureText: !authController.isPasswordVisible.value,
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        controller.isPasswordVisible.value
+                        authController.isPasswordVisible.value
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
                       ),
-                      onPressed: controller.togglePasswordVisibility,
+                      onPressed: authController.togglePasswordVisibility,
                     ),
-                  ),
-                ),
+                  );
+                }),
                 const SizedBox(height: AppDimens.marginM),
                 // Confirm Password Field
-                Obx(
-                  () => CustomInputField(
+                Obx(() {
+                  final authController = Get.find<AuthController>();
+                  return CustomInputField(
                     label: AppStrings.confirmPassword,
-                    controller: controller.confirmPasswordController,
+                    controller: authController.confirmPasswordController,
                     validator: (value) => Validators.confirmPassword(
                       value,
-                      controller.passwordController.text,
+                      authController.passwordController.text,
                     ),
-                    obscureText: !controller.isConfirmPasswordVisible.value,
+                    obscureText: !authController.isConfirmPasswordVisible.value,
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        controller.isConfirmPasswordVisible.value
+                        authController.isConfirmPasswordVisible.value
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
                       ),
-                      onPressed: controller.toggleConfirmPasswordVisibility,
+                      onPressed: authController.toggleConfirmPasswordVisibility,
                     ),
-                  ),
-                ),
+                  );
+                }),
                 const SizedBox(height: AppDimens.marginL),
                 // Register Button
-                Obx(
-                  () => CustomButton(
+                Obx(() {
+                  final authController = Get.find<AuthController>();
+                  return CustomButton(
                     text: AppStrings.register,
-                    onPressed: controller.isLoading.value ? null : () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        controller.register();
-                      }
-                    },
-                    isLoading: controller.isLoading.value,
-                  ),
-                ),
+                    onPressed: authController.isLoading.value
+                        ? null
+                        : () {
+                            if (_formKey.currentState?.validate() ?? false) {
+                              authController.register();
+                            }
+                          },
+                    isLoading: authController.isLoading.value,
+                  );
+                }),
                 const SizedBox(height: AppDimens.marginM),
                 // Login Link
                 Row(
@@ -121,7 +136,9 @@ class RegisterView extends GetView<AuthController> {
                       style: TextStyle(color: AppTheme.textSecondary),
                     ),
                     TextButton(
-                      onPressed: controller.navigateToLogin,
+                      onPressed: () {
+                        Get.find<AuthController>().navigateToLogin();
+                      },
                       child: const Text(AppStrings.login),
                     ),
                   ],
@@ -134,4 +151,3 @@ class RegisterView extends GetView<AuthController> {
     );
   }
 }
-

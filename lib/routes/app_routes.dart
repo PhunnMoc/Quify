@@ -1,3 +1,5 @@
+/// Application route constants
+/// Centralized route definitions for navigation
 class AppRoutes {
   static const String initial = '/';
   static const String login = '/login';

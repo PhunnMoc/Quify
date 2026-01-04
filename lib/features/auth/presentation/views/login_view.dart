@@ -8,12 +8,28 @@ import 'package:quify/core/widgets/custom_button.dart';
 import 'package:quify/core/widgets/custom_input_field.dart';
 import 'package:quify/features/auth/controller/auth_controller.dart';
 
-class LoginView extends GetView<AuthController> {
-  LoginView({super.key});
+class LoginView extends StatefulWidget {
+  const LoginView({super.key});
+
+  @override
+  State<LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = Get.find<AuthController>();
+      controller.clearControllers();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final controller = Get.find<AuthController>();
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -45,7 +61,7 @@ class LoginView extends GetView<AuthController> {
                 // Email/Username Field
                 CustomInputField(
                   label: 'Email hoặc ${AppStrings.username}',
-                  controller: controller.emailController,
+                  controller: Get.find<AuthController>().emailController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Vui lòng nhập email hoặc tên đăng nhập';
@@ -57,23 +73,24 @@ class LoginView extends GetView<AuthController> {
                 ),
                 const SizedBox(height: AppDimens.marginM),
                 // Password Field
-                Obx(
-                  () => CustomInputField(
+                Obx(() {
+                  final authController = Get.find<AuthController>();
+                  return CustomInputField(
                     label: AppStrings.password,
-                    controller: controller.passwordController,
+                    controller: authController.passwordController,
                     validator: Validators.password,
-                    obscureText: !controller.isPasswordVisible.value,
+                    obscureText: !authController.isPasswordVisible.value,
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        controller.isPasswordVisible.value
+                        authController.isPasswordVisible.value
                             ? Icons.visibility_outlined
                             : Icons.visibility_off_outlined,
                       ),
-                      onPressed: controller.togglePasswordVisibility,
+                      onPressed: authController.togglePasswordVisibility,
                     ),
-                  ),
-                ),
+                  );
+                }),
                 const SizedBox(height: AppDimens.marginS),
                 // Forgot Password
                 Align(
@@ -87,19 +104,20 @@ class LoginView extends GetView<AuthController> {
                 ),
                 const SizedBox(height: AppDimens.marginL),
                 // Login Button
-                Obx(
-                  () => CustomButton(
+                Obx(() {
+                  final authController = Get.find<AuthController>();
+                  return CustomButton(
                     text: AppStrings.login,
-                    onPressed: controller.isLoading.value
+                    onPressed: authController.isLoading.value
                         ? null
                         : () {
                             if (_formKey.currentState?.validate() ?? false) {
-                              controller.login();
+                              authController.login();
                             }
                           },
-                    isLoading: controller.isLoading.value,
-                  ),
-                ),
+                    isLoading: authController.isLoading.value,
+                  );
+                }),
                 const SizedBox(height: AppDimens.marginM),
                 // Register Link
                 Row(
@@ -110,7 +128,9 @@ class LoginView extends GetView<AuthController> {
                       style: TextStyle(color: AppTheme.textSecondary),
                     ),
                     TextButton(
-                      onPressed: controller.navigateToRegister,
+                      onPressed: () {
+                        Get.find<AuthController>().navigateToRegister();
+                      },
                       child: const Text(AppStrings.register),
                     ),
                   ],

@@ -11,14 +11,10 @@ class LibraryTab extends StatelessWidget {
         child: Center(
           child: Text(
             AppStrings.library,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
         ),
       ),
     );
   }
 }
-

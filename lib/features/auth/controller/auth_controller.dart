@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
 import 'package:quify/routes/app_routes.dart';
 
+/// Controller managing authentication state and user interactions
 class AuthController extends GetxController {
   final AuthRepository _authRepository = AuthRepository();
 
@@ -20,14 +21,10 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Không tự động navigate từ auth state changes
-    // Chỉ navigate khi user đăng nhập thành công trong hàm login()
   }
 
   @override
   void onClose() {
-    // Không dispose controllers vì chúng vẫn được dùng ở các màn hình khác
-    // Controllers sẽ được dispose khi app đóng hoàn toàn
     super.onClose();
   }
 
@@ -39,6 +36,18 @@ class AuthController extends GetxController {
     isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
   }
 
+  /// Clears all text controllers and resets sensitive state
+  /// Used for security purposes on sensitive screens
+  void clearControllers() {
+    emailController.clear();
+    passwordController.clear();
+    confirmPasswordController.clear();
+    isPasswordVisible.value = false;
+    isConfirmPasswordVisible.value = false;
+  }
+
+  /// Handles user login with email or username
+  /// Validates email verification and profile setup before allowing access
   Future<void> login() async {
     try {
       isLoading.value = true;
@@ -51,7 +60,6 @@ class AuthController extends GetxController {
         await _authRepository.reloadUser();
         final user = credential!.user!;
 
-        // Check email verification first
         if (!user.emailVerified) {
           Get.snackbar(
             'Thông báo',
@@ -60,12 +68,10 @@ class AuthController extends GetxController {
             backgroundColor: Colors.orange,
             colorText: Colors.white,
           );
-          // Initialize countdown will be done in EmailVerificationView
           Get.offAllNamed(AppRoutes.emailVerification);
           return;
         }
 
-        // Check profile setup (only if email is verified)
         if (user.uid.isEmpty) {
           Get.snackbar(
             'Lỗi',
@@ -82,7 +88,6 @@ class AuthController extends GetxController {
           return;
         }
 
-        // User is ready, go to home
         Get.snackbar(
           'Thành công',
           'Đăng nhập thành công',
@@ -90,6 +95,7 @@ class AuthController extends GetxController {
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
+        clearControllers();
         Get.offAllNamed(AppRoutes.home);
       }
     } on FirebaseAuthException catch (e) {
@@ -123,6 +129,7 @@ class AuthController extends GetxController {
     }
   }
 
+  /// Handles user registration and sends email verification
   Future<void> register() async {
     try {
       isLoading.value = true;
@@ -132,21 +139,17 @@ class AuthController extends GetxController {
       );
 
       if (credential?.user != null) {
-        // Create user document in Firestore
         await _authRepository.createUser(
           credential!.user!.uid,
           credential.user!.email!,
         );
 
-        // Reload user first to ensure user object is fresh
         await _authRepository.reloadUser();
 
-        // Send email verification
         try {
           await _authRepository.sendEmailVerification();
         } catch (e) {
-          // Error sending email, but don't block registration flow
-          // User can resend email from verification screen
+          // Email sending failed, but don't block registration flow
         }
 
         Get.snackbar(
@@ -158,7 +161,7 @@ class AuthController extends GetxController {
           duration: const Duration(seconds: 3),
         );
 
-        // Initialize countdown will be done in EmailVerificationView
+        clearControllers();
         Get.offAllNamed(AppRoutes.emailVerification);
       }
     } on FirebaseAuthException catch (e) {
@@ -190,11 +193,11 @@ class AuthController extends GetxController {
     }
   }
 
+  /// Resends email verification with countdown timer
   Future<void> resendVerificationEmail() async {
     try {
       isLoading.value = true;
 
-      // Check if user exists
       final user = getCurrentUser();
       if (user == null) {
         throw Exception('Không tìm thấy người dùng. Vui lòng đăng nhập lại.');
@@ -202,11 +205,8 @@ class AuthController extends GetxController {
 
       await _authRepository.sendEmailVerification();
 
-      // Start countdown
       canResendEmail.value = false;
       resendCountdown.value = 20;
-
-      // Start countdown timer
       _startCountdownTimer();
 
       Get.snackbar(
@@ -236,7 +236,6 @@ class AuthController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 4),
       );
-      // Re-enable button on error
       canResendEmail.value = true;
       resendCountdown.value = 0;
     } finally {
@@ -244,8 +243,8 @@ class AuthController extends GetxController {
     }
   }
 
+  /// Starts countdown timer for email resend cooldown
   void _startCountdownTimer() {
-    // Cancel any existing timer
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 1));
       if (resendCountdown.value > 0) {
@@ -258,13 +257,14 @@ class AuthController extends GetxController {
     });
   }
 
-  // Khởi tạo countdown khi vào màn hình email verification
+  /// Initializes countdown when entering email verification screen
   void initializeEmailVerificationCountdown() {
     canResendEmail.value = false;
     resendCountdown.value = 20;
     _startCountdownTimer();
   }
 
+  /// Checks if email is verified and navigates accordingly
   Future<void> checkEmailVerification() async {
     try {
       isLoading.value = true;
@@ -282,7 +282,6 @@ class AuthController extends GetxController {
             );
             return;
           }
-          // Check if user has setup profile
           final userData = await _authRepository.getUserData(user.uid);
           if (userData == null || userData['isSetupProfile'] != true) {
             Get.offAllNamed(AppRoutes.setupProfile);
@@ -324,6 +323,7 @@ class AuthController extends GetxController {
     return await _authRepository.usernameExists(username);
   }
 
+  /// Sets up user profile with full name and username
   Future<void> setupProfile({
     required String fullName,
     required String username,

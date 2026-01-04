@@ -57,7 +57,7 @@ class EditProfileView extends GetView<ProfileController> {
                             child: Text(
                               controller.fullNameController.text.isNotEmpty
                                   ? controller.fullNameController.text[0]
-                                      .toUpperCase()
+                                        .toUpperCase()
                                   : 'U',
                               style: const TextStyle(
                                 fontSize: 40,
@@ -144,4 +144,3 @@ class EditProfileView extends GetView<ProfileController> {
     );
   }
 }
-

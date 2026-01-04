@@ -21,9 +21,7 @@ class SetupProfileView extends GetView<AuthController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.setupProfile),
-      ),
+      appBar: AppBar(title: const Text(AppStrings.setupProfile)),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -47,10 +45,7 @@ class SetupProfileView extends GetView<AuthController> {
                 const SizedBox(height: 8),
                 Text(
                   'Hoàn tất thông tin để bắt đầu sử dụng Quify',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
@@ -162,6 +157,10 @@ class SetupProfileView extends GetView<AuthController> {
         username: usernameController.text.trim(),
       );
 
+      // Clear sensitive data
+      fullNameController.clear();
+      usernameController.clear();
+
       // Welcome message will be shown in HomeTab
 
       // Navigate to home
@@ -177,4 +176,3 @@ class SetupProfileView extends GetView<AuthController> {
     }
   }
 }
-

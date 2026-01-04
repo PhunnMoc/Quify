@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// Reusable text input field widget with validation support
+/// Supports prefix/suffix icons, obscure text, and custom input formatters
 class CustomInputField extends StatelessWidget {
   final String label;
   final String? hint;
