@@ -113,16 +113,16 @@ class ProfileController extends GetxController {
 
       isEditing.value = false;
 
+      // Show success message
       Get.snackbar(
         'Thành công',
         'Cập nhật hồ sơ thành công',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+        margin: const EdgeInsets.all(16),
       );
-
-      // Return true to indicate profile was updated
-      Get.back(result: true);
     } catch (e) {
       Get.snackbar(
         'Lỗi',
