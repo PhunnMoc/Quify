@@ -4,7 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_strings.dart';
 import 'package:quify/core/values/app_dimens.dart';
+import 'package:quify/features/admin/controller/admin_controller.dart';
+import 'package:quify/features/auth/controller/auth_controller.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
+import 'package:quify/features/quiz/controller/quiz_controller.dart';
 import 'package:quify/routes/app_routes.dart';
 
 class AccountTab extends StatefulWidget {
@@ -18,11 +21,16 @@ class _AccountTabState extends State<AccountTab> {
   final authRepository = AuthRepository();
   Map<String, dynamic>? userData;
   bool isLoading = true;
+  AdminController? _adminController;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    // Khởi tạo AdminController nếu đang đăng nhập admin
+    if (Get.find<AuthController>().isAdminLoggedIn()) {
+      _adminController = Get.put(AdminController(), tag: 'admin');
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -195,6 +203,22 @@ class _AccountTabState extends State<AccountTab> {
                         // TODO: Navigate to privacy policy
                       },
                     ),
+                    // Tạo data - chỉ hiển thị cho admin
+                    if (Get.find<AuthController>().isAdminLoggedIn())
+                      Obx(() {
+                        final adminController = _adminController ??
+                            Get.find<AdminController>(tag: 'admin');
+                        return _buildMenuItem(
+                          icon: Icons.add_circle_outline,
+                          title: 'Tạo data',
+                          onTap: adminController.isLoading.value
+                              ? null
+                              : () {
+                                  adminController.createDefaultCategories();
+                                },
+                          isLoading: adminController.isLoading.value,
+                        );
+                      }),
                     const SizedBox(height: AppDimens.marginL),
                     // Logout Button
                     Padding(
@@ -203,6 +227,13 @@ class _AccountTabState extends State<AccountTab> {
                       ),
                       child: OutlinedButton(
                         onPressed: () async {
+                          if (Get.isRegistered<QuizController>(tag: 'quiz')) {
+                            final quizController = Get.find<QuizController>(tag: 'quiz');
+                            quizController.clearDataAndStopListening();
+                          }
+
+                          final authController = Get.find<AuthController>();
+                          authController.clearAdminLogin();
                           await authRepository.logout();
                           Get.offAllNamed(AppRoutes.login);
                         },
@@ -234,15 +265,28 @@ class _AccountTabState extends State<AccountTab> {
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
+    bool isLoading = false,
   }) {
     return Card(
       margin: const EdgeInsets.only(bottom: AppDimens.marginS),
       child: ListTile(
-        leading: Icon(icon, color: AppTheme.primaryColor),
+        leading: isLoading
+            ? SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppTheme.primaryColor,
+                ),
+              )
+            : Icon(icon, color: AppTheme.primaryColor),
         title: Text(title),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onTap,
+        trailing: isLoading
+            ? const SizedBox.shrink()
+            : const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: isLoading ? null : onTap,
+        enabled: !isLoading,
       ),
     );
   }

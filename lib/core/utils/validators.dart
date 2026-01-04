@@ -95,4 +95,96 @@ class Validators {
 
     return null;
   }
+
+  /// Validates quiz title
+  static String? quizTitle(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập tiêu đề quiz';
+    }
+    if (value.trim().length < 3) {
+      return 'Tiêu đề phải có ít nhất 3 ký tự';
+    }
+    if (value.length > 100) {
+      return 'Tiêu đề không được vượt quá 100 ký tự';
+    }
+    return null;
+  }
+
+  /// Validates quiz description (optional)
+  static String? quizDescription(String? value) {
+    if (value == null || value.isEmpty) {
+      return null; // Optional field
+    }
+    if (value.trim().length < 10) {
+      return 'Mô tả phải có ít nhất 10 ký tự';
+    }
+    if (value.length > 500) {
+      return 'Mô tả không được vượt quá 500 ký tự';
+    }
+    return null;
+  }
+
+  /// Validates question text
+  static String? questionText(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập nội dung câu hỏi';
+    }
+    if (value.trim().length < 5) {
+      return 'Nội dung câu hỏi phải có ít nhất 5 ký tự';
+    }
+    if (value.length > 500) {
+      return 'Nội dung câu hỏi không được vượt quá 500 ký tự';
+    }
+    return null;
+  }
+
+  /// Validates option text
+  static String? optionText(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập đáp án';
+    }
+    if (value.trim().length < 1) {
+      return 'Đáp án không được để trống';
+    }
+    if (value.length > 200) {
+      return 'Đáp án không được vượt quá 200 ký tự';
+    }
+    return null;
+  }
+
+  /// Validates time limit (seconds)
+  static String? timeLimit(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập thời gian';
+    }
+    final time = int.tryParse(value);
+    if (time == null) {
+      return 'Thời gian phải là số';
+    }
+    if (time < 5) {
+      return 'Thời gian tối thiểu là 5 giây';
+    }
+    if (time > 300) {
+      return 'Thời gian tối đa là 300 giây (5 phút)';
+    }
+    return null;
+  }
+
+  /// Validates points
+  static String? points(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập điểm số';
+    }
+    final points = int.tryParse(value);
+    if (points == null) {
+      return 'Điểm số phải là số';
+    }
+    if (points < 1) {
+      return 'Điểm số tối thiểu là 1';
+    }
+    if (points > 10000) {
+      return 'Điểm số tối đa là 10000';
+    }
+    return null;
+  }
 }

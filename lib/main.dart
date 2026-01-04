@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:quify/core/bindings/initial_binding.dart';
 import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
@@ -11,6 +12,7 @@ import 'package:quify/routes/app_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await GetStorage.init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
@@ -34,6 +36,16 @@ class _MyAppState extends State<MyApp> {
 
   /// Determines the initial route based on user authentication and profile status
   Future<void> _determineInitialRoute() async {
+    // Kiểm tra trạng thái admin trước
+    final storage = GetStorage();
+    if (storage.read('is_admin_logged_in') == true) {
+      setState(() {
+        initialRoute = AppRoutes.home;
+        isInitializing = false;
+      });
+      return;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       setState(() {

@@ -29,7 +29,6 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<AuthController>();
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -78,7 +77,21 @@ class _LoginViewState extends State<LoginView> {
                   return CustomInputField(
                     label: AppStrings.password,
                     controller: authController.passwordController,
-                    validator: Validators.password,
+                    validator: (value) {
+                      // Bỏ qua validation cho tài khoản admin
+                      final emailOrUsername = authController
+                          .emailController
+                          .text
+                          .trim();
+                      if (emailOrUsername == 'AdminQuify') {
+                        if (value == null || value.isEmpty) {
+                          return 'Vui lòng nhập mật khẩu';
+                        }
+                        return null;
+                      }
+                      // Validation bình thường cho các tài khoản khác
+                      return Validators.password(value);
+                    },
                     obscureText: !authController.isPasswordVisible.value,
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
