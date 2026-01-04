@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/widgets/custom_button.dart';
+import 'package:quify/features/auth/controller/auth_controller.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
 import 'package:quify/routes/app_routes.dart';
 
@@ -48,6 +49,9 @@ class ProfileTab extends StatelessWidget {
               CustomButton(
                 text: 'Đăng xuất',
                 onPressed: () async {
+                  final authController = Get.find<AuthController>();
+                  // Clear trạng thái admin nếu có
+                  authController.clearAdminLogin();
                   await authRepository.logout();
                   Get.offAllNamed(AppRoutes.login);
                 },

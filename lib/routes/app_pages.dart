@@ -8,6 +8,10 @@ import 'package:quify/features/home/binding/home_binding.dart';
 import 'package:quify/features/home/presentation/views/home_view.dart';
 import 'package:quify/features/profile/binding/profile_binding.dart';
 import 'package:quify/features/profile/presentation/views/edit_profile_view.dart';
+import 'package:quify/features/quiz/binding/quiz_binding.dart';
+import 'package:quify/features/quiz/presentation/views/create_quiz_view.dart';
+import 'package:quify/features/quiz/presentation/views/edit_quiz_view.dart';
+import 'package:quify/features/quiz/presentation/views/quiz_detail_view.dart';
 import 'package:quify/routes/app_routes.dart';
 
 /// Application route configuration
@@ -48,6 +52,27 @@ class AppPages {
       name: AppRoutes.editProfile,
       page: () => EditProfileView(),
       binding: ProfileBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.createQuiz,
+      page: () => const CreateQuizView(),
+      binding: QuizBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.quizDetail,
+      page: () {
+        final quizId = Get.arguments as String;
+        return QuizDetailView(quizId: quizId);
+      },
+      binding: QuizBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.editQuiz,
+      page: () {
+        final quizId = Get.arguments as String;
+        return EditQuizView(quizId: quizId);
+      },
+      binding: QuizBinding(),
     ),
   ];
 }

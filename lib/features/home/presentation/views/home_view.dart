@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_strings.dart';
+import 'package:quify/features/auth/controller/auth_controller.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
 import 'package:quify/features/home/controller/home_controller.dart';
 import 'package:quify/features/home/presentation/views/tabs/home_tab.dart';
@@ -29,6 +30,15 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _checkUserStatus() async {
+    // Kiểm tra trạng thái admin trước
+    final authController = Get.find<AuthController>();
+    if (authController.isAdminLoggedIn()) {
+      setState(() {
+        _isChecking = false;
+      });
+      return;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       Get.offAllNamed(AppRoutes.login);
@@ -111,11 +121,7 @@ class _HomeViewContent extends GetView<HomeController> {
                   bottom: bottomNavTop - 32,
                   child: GestureDetector(
                     onTap: () {
-                      Get.snackbar(
-                        'Tạo mới',
-                        'Tính năng đang phát triển',
-                        snackPosition: SnackPosition.BOTTOM,
-                      );
+                      Get.toNamed(AppRoutes.createQuiz);
                     },
                     child: Container(
                       width: 64,

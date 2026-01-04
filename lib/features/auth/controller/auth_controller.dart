@@ -1,12 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
 import 'package:quify/routes/app_routes.dart';
 
 /// Controller managing authentication state and user interactions
 class AuthController extends GetxController {
   final AuthRepository _authRepository = AuthRepository();
+  final _storage = GetStorage();
+  static const String _adminLoginKey = 'is_admin_logged_in';
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -48,13 +51,46 @@ class AuthController extends GetxController {
 
   /// Handles user login with email or username
   /// Validates email verification and profile setup before allowing access
+  /// Admin account (AdminQuify/Quify@123) bypasses Firebase authentication
   Future<void> login() async {
     try {
       isLoading.value = true;
-      final credential = await _authRepository.login(
-        emailController.text.trim(),
-        passwordController.text,
-      );
+
+      // Check for admin account - bypass Firebase authentication
+      final emailOrUsername = emailController.text.trim();
+      final password = passwordController.text.trim();
+
+      // Kiểm tra tài khoản admin (case-insensitive cho username)
+      if (emailOrUsername.toLowerCase() == 'adminquify') {
+        if (password == 'Quify@123') {
+          // Lưu trạng thái admin login
+          await _storage.write(_adminLoginKey, true);
+          Get.snackbar(
+            'Thành công',
+            'Đăng nhập admin thành công',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+          clearControllers();
+          isLoading.value = false;
+          Get.offAllNamed(AppRoutes.home);
+          return;
+        } else {
+          // Password admin không đúng
+          Get.snackbar(
+            'Lỗi',
+            'Mật khẩu admin không đúng',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          isLoading.value = false;
+          return;
+        }
+      }
+
+      final credential = await _authRepository.login(emailOrUsername, password);
 
       if (credential?.user != null) {
         await _authRepository.reloadUser();
@@ -350,5 +386,15 @@ class AuthController extends GetxController {
 
   User? getCurrentUser() {
     return _authRepository.getCurrentUser();
+  }
+
+  /// Kiểm tra xem có đang đăng nhập bằng tài khoản admin không
+  bool isAdminLoggedIn() {
+    return _storage.read(_adminLoginKey) == true;
+  }
+
+  /// Clear trạng thái admin login
+  void clearAdminLogin() {
+    _storage.remove(_adminLoginKey);
   }
 }
