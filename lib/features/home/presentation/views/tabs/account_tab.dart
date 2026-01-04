@@ -7,6 +7,7 @@ import 'package:quify/core/values/app_dimens.dart';
 import 'package:quify/features/admin/controller/admin_controller.dart';
 import 'package:quify/features/auth/controller/auth_controller.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
+import 'package:quify/features/quiz/controller/quiz_controller.dart';
 import 'package:quify/routes/app_routes.dart';
 
 class AccountTab extends StatefulWidget {
@@ -226,8 +227,12 @@ class _AccountTabState extends State<AccountTab> {
                       ),
                       child: OutlinedButton(
                         onPressed: () async {
+                          if (Get.isRegistered<QuizController>(tag: 'quiz')) {
+                            final quizController = Get.find<QuizController>(tag: 'quiz');
+                            quizController.clearDataAndStopListening();
+                          }
+
                           final authController = Get.find<AuthController>();
-                          // Clear trạng thái admin nếu có
                           authController.clearAdminLogin();
                           await authRepository.logout();
                           Get.offAllNamed(AppRoutes.login);

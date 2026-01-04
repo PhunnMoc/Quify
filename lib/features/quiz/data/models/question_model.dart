@@ -40,7 +40,7 @@ class QuestionModel {
       imageUrl: map['imageUrl']?.toString(),
       type: map['type']?.toString() ?? 'SINGLE',
       timeLimit: map['timeLimit'] as int? ?? 20,
-      points: map['points'] as int? ?? 1000,
+      points: map['points'] as int? ?? 100,
       order: map['order'] as int? ?? 0,
       options: (map['options'] as List<dynamic>?)
               ?.map((opt) => QuestionOption.fromMap(opt as Map<String, dynamic>))

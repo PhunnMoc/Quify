@@ -49,80 +49,37 @@ class QuizProvider {
 
   /// Retrieves all quizzes owned by a specific user
   /// Returns a stream that emits lists of quizzes ordered by creation date (newest first)
-  /// Falls back to manual sorting if Firestore index is not available
+  /// Requires Firestore index on (ownerId, createdAt)
   Stream<List<QuizModel>> getUserQuizzes(String userId) {
-    try {
-      try {
-        return _firestore
-            .collection(_quizzesCollection)
-            .where('ownerId', isEqualTo: userId)
-            .orderBy('createdAt', descending: true)
-            .snapshots()
-            .map((snapshot) {
-              try {
-                return snapshot.docs
-                    .map((doc) {
-                      try {
-                        final data = doc.data();
-                        if (!data.containsKey('id') || 
-                            data['id'] == null || 
-                            data['id'].toString().isEmpty) {
-                          data['id'] = doc.id;
-                        }
-                        return QuizModel.fromMap(data);
-                      } catch (e) {
-                        print('Error parsing quiz document ${doc.id}: $e');
-                        return null;
-                      }
-                    })
-                    .whereType<QuizModel>()
-                    .toList();
-              } catch (e) {
-                print('Error processing quiz snapshot: $e');
-                return <QuizModel>[];
-              }
-            });
-      } catch (e) {
-        if (e.toString().contains('index') || 
-            e.toString().contains('Index') ||
-            e.toString().contains('requires an index')) {
-          return _firestore
-              .collection(_quizzesCollection)
-              .where('ownerId', isEqualTo: userId)
-              .snapshots()
-              .map((snapshot) {
-                try {
-                  final quizzes = snapshot.docs
-                      .map((doc) {
-                        try {
-                          final data = doc.data();
-                          if (!data.containsKey('id') || 
-                              data['id'] == null || 
-                              data['id'].toString().isEmpty) {
-                            data['id'] = doc.id;
-                          }
-                          return QuizModel.fromMap(data);
-                        } catch (e) {
-                          print('Error parsing quiz document ${doc.id}: $e');
-                          return null;
-                        }
-                      })
-                      .whereType<QuizModel>()
-                      .toList();
-                  quizzes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-                  return quizzes;
-                } catch (e) {
-                  print('Error processing quiz snapshot: $e');
-                  return <QuizModel>[];
-                }
-              });
-        }
-        rethrow;
-      }
-    } catch (e) {
-      print('Error in getUserQuizzes: $e');
-      return Stream.value(<QuizModel>[]);
-    }
+    return _firestore
+        .collection(_quizzesCollection)
+        .where('ownerId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          try {
+            return snapshot.docs
+                .map((doc) {
+                  try {
+                    final data = doc.data();
+                    if (!data.containsKey('id') || 
+                        data['id'] == null || 
+                        data['id'].toString().isEmpty) {
+                      data['id'] = doc.id;
+                    }
+                    return QuizModel.fromMap(data);
+                  } catch (e) {
+                    print('Error parsing quiz document ${doc.id}: $e');
+                    return null;
+                  }
+                })
+                .whereType<QuizModel>()
+                .toList();
+          } catch (e) {
+            print('Error processing quiz snapshot: $e');
+            return <QuizModel>[];
+          }
+        });
   }
 
   /// Retrieves all public quizzes
@@ -238,6 +195,22 @@ class QuizProvider {
         .collection(_quizzesCollection)
         .doc(quizId)
         .update({'totalQuestions': count});
+  }
+
+  /// Reorders questions using batch update for better performance
+  /// Updates the order field of multiple questions in a single Firestore write operation
+  Future<void> reorderQuestionsBatch(String quizId, List<QuestionModel> questions) async {
+    final batch = _firestore.batch();
+    final collectionRef = _firestore
+        .collection(_quizzesCollection)
+        .doc(quizId)
+        .collection(_questionsSubCollection);
+
+    for (var question in questions) {
+      batch.update(collectionRef.doc(question.id), {'order': question.order});
+    }
+
+    await batch.commit();
   }
 }
 

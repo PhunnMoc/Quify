@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -20,7 +21,7 @@ class QuizController extends GetxController {
   final questionImageUrlController = TextEditingController();
   final questionType = 'SINGLE'.obs;
   final timeLimitController = TextEditingController(text: '20');
-  final pointsController = TextEditingController(text: '1000');
+  final pointsController = TextEditingController(text: '100');
   final questionOptions = <QuestionOption>[].obs;
 
   final isLoading = false.obs;
@@ -28,8 +29,11 @@ class QuizController extends GetxController {
   final quizzes = <QuizModel>[].obs;
   final questions = <QuestionModel>[].obs;
 
+  StreamSubscription? _userQuizzesSubscription;
+
   @override
   void onClose() {
+    _userQuizzesSubscription?.cancel();
     titleController.dispose();
     descriptionController.dispose();
     coverImageUrlController.dispose();
@@ -51,13 +55,13 @@ class QuizController extends GetxController {
     questionImageUrlController.clear();
     questionType.value = 'SINGLE';
     timeLimitController.text = '20';
-    pointsController.text = '1000';
+    pointsController.text = '100';
     questionOptions.clear();
     currentQuizId.value = '';
+    questions.clear();
   }
 
   /// Creates a new quiz with the current form data
-  /// Returns the quiz ID if successful, null otherwise
   Future<String?> createQuiz() async {
     try {
       isLoading.value = true;
@@ -201,10 +205,7 @@ class QuizController extends GetxController {
   }
 
   /// Loads a quiz and populates the form for editing
-  /// Delays execution to avoid setState conflicts during build
   Future<void> loadQuizForEdit(String quizId) async {
-    await Future.delayed(Duration.zero);
-
     try {
       isLoading.value = true;
       final quiz = await _quizProvider.getQuizById(quizId);
@@ -261,25 +262,25 @@ class QuizController extends GetxController {
   }
 
   /// Loads all quizzes owned by the current user
-  /// Sets up a real-time stream that updates when quizzes change
   void loadUserQuizzes() {
     final user = _auth.currentUser;
     if (user == null) {
-      print('loadUserQuizzes: No user found');
       quizzes.value = [];
       return;
     }
 
-    print('loadUserQuizzes: Loading quizzes for user ${user.uid}');
-    _quizProvider
+    _userQuizzesSubscription?.cancel();
+
+    _userQuizzesSubscription = _quizProvider
         .getUserQuizzes(user.uid)
         .listen(
           (quizList) {
-            print('loadUserQuizzes: Loaded ${quizList.length} quizzes');
             quizzes.value = quizList;
           },
           onError: (error) {
-            print('loadUserQuizzes: Error loading quizzes: $error');
+            if (_auth.currentUser == null) return;
+
+            print('Error loading quizzes: $error');
             Get.snackbar(
               'Lỗi',
               'Không thể tải danh sách quiz: ${error.toString()}',
@@ -292,16 +293,24 @@ class QuizController extends GetxController {
         );
   }
 
+  /// Clears all data and stops listening to streams
+  void clearDataAndStopListening() {
+    _userQuizzesSubscription?.cancel();
+    _userQuizzesSubscription = null;
+    quizzes.clear();
+    questions.clear();
+    currentQuizId.value = '';
+  }
+
   /// Adds a new empty option to the question options list
   void addQuestionOption() {
-    final optionId = 'opt_${questionOptions.length + 1}';
+    final optionId = DateTime.now().millisecondsSinceEpoch.toString();
     questionOptions.add(
       QuestionOption(id: optionId, text: '', isCorrect: false),
     );
   }
 
   /// Removes a question option at the specified index
-  /// Prevents removal if it would result in fewer than 2 options
   void removeQuestionOption(int index) {
     if (questionOptions.length > 2) {
       questionOptions.removeAt(index);
@@ -316,60 +325,66 @@ class QuizController extends GetxController {
     }
   }
 
+  /// Validates the question form
+  bool _validateQuestionForm() {
+    if (questionOptions.length < 2) {
+      Get.snackbar(
+        'Lỗi',
+        'Phải có ít nhất 2 đáp án',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    final hasCorrectAnswer = questionOptions.any((opt) => opt.isCorrect);
+    if (!hasCorrectAnswer) {
+      Get.snackbar(
+        'Lỗi',
+        'Phải có ít nhất 1 đáp án đúng',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+
+    if (questionType.value == 'SINGLE') {
+      final correctCount = questionOptions.where((opt) => opt.isCorrect).length;
+      if (correctCount > 1) {
+        Get.snackbar(
+          'Lỗi',
+          'Câu hỏi đơn đáp án chỉ được có 1 đáp án đúng',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   /// Creates a new question in a quiz with the current form data
-  /// Validates that the question has at least 2 options and at least one correct answer
   Future<void> createQuestion(String quizId) async {
     try {
-      if (questionOptions.length < 2) {
-        Get.snackbar(
-          'Lỗi',
-          'Phải có ít nhất 2 đáp án',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+      if (!_validateQuestionForm()) {
         return;
-      }
-
-      final hasCorrectAnswer = questionOptions.any((opt) => opt.isCorrect);
-      if (!hasCorrectAnswer) {
-        Get.snackbar(
-          'Lỗi',
-          'Phải có ít nhất 1 đáp án đúng',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
-      if (questionType.value == 'SINGLE') {
-        final correctCount = questionOptions
-            .where((opt) => opt.isCorrect)
-            .length;
-        if (correctCount > 1) {
-          Get.snackbar(
-            'Lỗi',
-            'Câu hỏi đơn đáp án chỉ được có 1 đáp án đúng',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-          return;
-        }
       }
 
       isLoading.value = true;
 
       final question = QuestionModel(
-        id: '', // Will be set by provider
+        id: '',
         text: questionTextController.text.trim(),
         imageUrl: questionImageUrlController.text.trim().isEmpty
             ? null
             : questionImageUrlController.text.trim(),
         type: questionType.value,
         timeLimit: int.tryParse(timeLimitController.text) ?? 20,
-        points: int.tryParse(pointsController.text) ?? 1000,
+        points: int.tryParse(pointsController.text) ?? 100,
         order: questions.length + 1,
         options: questionOptions.toList(),
       );
@@ -381,7 +396,7 @@ class QuizController extends GetxController {
       questionImageUrlController.clear();
       questionType.value = 'SINGLE';
       timeLimitController.text = '20';
-      pointsController.text = '1000';
+      pointsController.text = '100';
       questionOptions.clear();
       addQuestionOption();
       addQuestionOption();
@@ -400,46 +415,10 @@ class QuizController extends GetxController {
   }
 
   /// Updates an existing question in a quiz with the current form data
-  /// Validates that the question has at least 2 options and at least one correct answer
   Future<void> updateQuestion(String quizId, String questionId) async {
     try {
-      if (questionOptions.length < 2) {
-        Get.snackbar(
-          'Lỗi',
-          'Phải có ít nhất 2 đáp án',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+      if (!_validateQuestionForm()) {
         return;
-      }
-
-      final hasCorrectAnswer = questionOptions.any((opt) => opt.isCorrect);
-      if (!hasCorrectAnswer) {
-        Get.snackbar(
-          'Lỗi',
-          'Phải có ít nhất 1 đáp án đúng',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-        return;
-      }
-
-      if (questionType.value == 'SINGLE') {
-        final correctCount = questionOptions
-            .where((opt) => opt.isCorrect)
-            .length;
-        if (correctCount > 1) {
-          Get.snackbar(
-            'Lỗi',
-            'Câu hỏi đơn đáp án chỉ được có 1 đáp án đúng',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-          return;
-        }
       }
 
       isLoading.value = true;
@@ -453,7 +432,7 @@ class QuizController extends GetxController {
             : questionImageUrlController.text.trim(),
         type: questionType.value,
         timeLimit: int.tryParse(timeLimitController.text) ?? 20,
-        points: int.tryParse(pointsController.text) ?? 1000,
+        points: int.tryParse(pointsController.text) ?? 100,
         order: existingQuestion.order,
         options: questionOptions.toList(),
       );
@@ -474,24 +453,25 @@ class QuizController extends GetxController {
   }
 
   /// Deletes a question from a quiz and reorders remaining questions
-  /// Updates the quiz's total question count
   Future<void> deleteQuestion(String quizId, String questionId) async {
     try {
       isLoading.value = true;
       await _quizProvider.deleteQuestion(quizId, questionId);
       await loadQuestions(quizId);
+
+      final questionsToReorder = <QuestionModel>[];
       for (int i = 0; i < questions.length; i++) {
         final question = questions[i];
         if (question.order != i + 1) {
-          await _quizProvider.updateQuestion(
-            quizId,
-            question.id,
-            question.copyWith(order: i + 1),
-          );
+          questionsToReorder.add(question.copyWith(order: i + 1));
         }
       }
 
-      await _quizProvider.updateQuizQuestionCount(quizId, questions.length - 1);
+      if (questionsToReorder.isNotEmpty) {
+        await _quizProvider.reorderQuestionsBatch(quizId, questionsToReorder);
+      }
+
+      await _quizProvider.updateQuizQuestionCount(quizId, questions.length);
       await loadQuestions(quizId);
 
       Get.snackbar(
@@ -525,13 +505,12 @@ class QuizController extends GetxController {
   }
 
   /// Resets the question form to default values
-  /// Does not add default options; the view should handle that
   void clearQuestionForm() {
     questionTextController.clear();
     questionImageUrlController.clear();
     questionType.value = 'SINGLE';
     timeLimitController.text = '20';
-    pointsController.text = '1000';
+    pointsController.text = '100';
     questionOptions.clear();
   }
 

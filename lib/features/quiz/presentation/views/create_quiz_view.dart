@@ -9,6 +9,7 @@ import 'package:quify/features/admin/data/providers/category_provider.dart';
 import 'package:quify/features/home/controller/home_controller.dart';
 import 'package:quify/features/quiz/controller/quiz_controller.dart';
 import 'package:quify/features/quiz/data/models/question_model.dart';
+import 'package:quify/features/quiz/presentation/widgets/quiz_form_fields.dart';
 
 class CreateQuizView extends StatefulWidget {
   const CreateQuizView({super.key});
@@ -22,8 +23,6 @@ class _CreateQuizViewState extends State<CreateQuizView> {
   final _questionFormKey = GlobalKey<FormState>();
   late final QuizController _quizController;
   final _categoryProvider = CategoryProvider();
-  List<Map<String, dynamic>> _categories = [];
-  bool _loadingCategories = true;
   bool _showQuestionForm = false;
   List<QuestionModel> _tempQuestions = [];
   int? _editingQuestionIndex;
@@ -34,40 +33,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
   void initState() {
     super.initState();
     _quizController = Get.put(QuizController(), tag: 'quiz');
-    _loadCategories();
     _quizController.clearForm();
-  }
-
-  Future<void> _loadCategories() async {
-    try {
-      final categories = await _categoryProvider.getAllCategories();
-      setState(() {
-        _categories = categories;
-        _loadingCategories = false;
-      });
-
-      if (categories.isEmpty) {
-        Get.snackbar(
-          'Thông báo',
-          'Chưa có phân loại nào. Vui lòng tạo phân loại từ menu admin.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 4),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _loadingCategories = false;
-      });
-      Get.snackbar(
-        'Lỗi',
-        'Không thể tải danh sách phân loại: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
   }
 
   void _showAddQuestionForm() {
@@ -89,7 +55,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
         _optionControllers[i] = TextEditingController();
       }
     });
-    Future.delayed(const Duration(milliseconds: 100), () {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -118,7 +84,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
     });
 
     // Scroll đến form sau một chút để form render xong
-    Future.delayed(const Duration(milliseconds: 100), () {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -223,7 +189,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
           : _quizController.questionImageUrlController.text.trim(),
       type: _quizController.questionType.value,
       timeLimit: int.tryParse(_quizController.timeLimitController.text) ?? 20,
-      points: int.tryParse(_quizController.pointsController.text) ?? 1000,
+      points: int.tryParse(_quizController.pointsController.text) ?? 100,
       order: _editingQuestionIndex != null
           ? _tempQuestions[_editingQuestionIndex!].order
           : _tempQuestions.length + 1,
@@ -392,155 +358,9 @@ class _CreateQuizViewState extends State<CreateQuizView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              CustomInputField(
-                label: 'Tiêu đề Quiz *',
-                controller: _quizController.titleController,
-                validator: Validators.quizTitle,
-                prefixIcon: const Icon(Icons.title),
-              ),
-              const SizedBox(height: AppDimens.marginM),
-
-              CustomInputField(
-                label: 'Mô tả (tùy chọn)',
-                controller: _quizController.descriptionController,
-                validator: Validators.quizDescription,
-                maxLines: 4,
-                prefixIcon: const Icon(Icons.description),
-              ),
-              const SizedBox(height: AppDimens.marginM),
-
-              CustomInputField(
-                label: 'Link ảnh bìa (tùy chọn)',
-                controller: _quizController.coverImageUrlController,
-                keyboardType: TextInputType.url,
-                prefixIcon: const Icon(Icons.image),
-              ),
-              const SizedBox(height: AppDimens.marginM),
-
-              Obx(
-                () => Card(
-                  child: SwitchListTile(
-                    title: const Text('Công khai'),
-                    subtitle: const Text(
-                      'Cho phép người khác tìm thấy quiz này',
-                    ),
-                    value: _quizController.isPublic.value,
-                    onChanged: (value) {
-                      _quizController.isPublic.value = value;
-                    },
-                    secondary: Icon(
-                      _quizController.isPublic.value
-                          ? Icons.public
-                          : Icons.lock,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppDimens.marginM),
-
-              // Categories Selection
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppDimens.paddingM),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.category,
-                            color: AppTheme.primaryColor,
-                          ),
-                          const SizedBox(width: AppDimens.marginS),
-                          const Text(
-                            'Phân loại *',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Spacer(),
-                          Obx(
-                            () => Text(
-                              '${_quizController.selectedCategories.length}/3',
-                              style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppDimens.marginS),
-                      if (_loadingCategories)
-                        const Center(child: CircularProgressIndicator())
-                      else if (_categories.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Text('Không có phân loại nào.'),
-                        )
-                      else
-                        Obx(() {
-                          // MẸO QUAN TRỌNG: Truy cập biến Rx ngay đầu hàm để đăng ký listener
-                          final selectedList = _quizController
-                              .selectedCategories
-                              .toList();
-
-                          return Wrap(
-                            spacing: AppDimens.marginS,
-                            runSpacing: AppDimens.marginS,
-                            children: _categories.map((category) {
-                              final categoryId = category['id'] as String;
-                              final categoryName = category['name'] as String;
-                              final isSelected = selectedList.contains(
-                                categoryId,
-                              );
-                              return FilterChip(
-                                label: Text(categoryName),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  final currentList = List<String>.from(
-                                    _quizController.selectedCategories,
-                                  );
-                                  if (selected) {
-                                    if (currentList.length < 3) {
-                                      currentList.add(categoryId);
-                                      _quizController.selectedCategories.value =
-                                          currentList;
-                                    } else {
-                                      Get.snackbar(
-                                        'Thông báo',
-                                        'Chỉ được chọn tối đa 3 phân loại',
-                                        snackPosition: SnackPosition.BOTTOM,
-                                        backgroundColor: Colors.orange,
-                                        colorText: Colors.white,
-                                      );
-                                    }
-                                  } else {
-                                    currentList.remove(categoryId);
-                                    _quizController.selectedCategories.value =
-                                        currentList;
-                                  }
-                                },
-                                selectedColor: AppTheme.primaryColor
-                                    .withOpacity(0.2),
-                                checkmarkColor: AppTheme.primaryColor,
-                              );
-                            }).toList(),
-                          );
-                        }),
-                      const SizedBox(height: AppDimens.marginS),
-                      Text(
-                        'Chọn từ 1 đến 3 phân loại',
-                        style: TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              QuizFormFields(
+                quizController: _quizController,
+                categoryProvider: _categoryProvider,
               ),
               const SizedBox(height: AppDimens.marginXL),
 

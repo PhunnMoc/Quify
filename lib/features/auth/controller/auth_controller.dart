@@ -63,15 +63,7 @@ class AuthController extends GetxController {
       // Kiểm tra tài khoản admin (case-insensitive cho username)
       if (emailOrUsername.toLowerCase() == 'adminquify') {
         if (password == 'Quify@123') {
-          // Lưu trạng thái admin login
           await _storage.write(_adminLoginKey, true);
-          Get.snackbar(
-            'Thành công',
-            'Đăng nhập admin thành công',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
           clearControllers();
           isLoading.value = false;
           Get.offAllNamed(AppRoutes.home);
@@ -124,13 +116,6 @@ class AuthController extends GetxController {
           return;
         }
 
-        Get.snackbar(
-          'Thành công',
-          'Đăng nhập thành công',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
         clearControllers();
         Get.offAllNamed(AppRoutes.home);
       }
