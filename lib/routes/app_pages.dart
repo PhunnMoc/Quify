@@ -4,6 +4,10 @@ import 'package:quify/features/auth/presentation/views/email_verification_view.d
 import 'package:quify/features/auth/presentation/views/login_view.dart';
 import 'package:quify/features/auth/presentation/views/register_view.dart';
 import 'package:quify/features/auth/presentation/views/setup_profile_view.dart';
+import 'package:quify/features/game/binding/game_binding.dart';
+import 'package:quify/features/game/presentation/views/game_view.dart';
+import 'package:quify/features/game/presentation/views/lobby_view.dart';
+import 'package:quify/features/game/presentation/views/result_view.dart';
 import 'package:quify/features/home/binding/home_binding.dart';
 import 'package:quify/features/home/presentation/views/home_view.dart';
 import 'package:quify/features/profile/binding/profile_binding.dart';
@@ -73,6 +77,22 @@ class AppPages {
         return EditQuizView(quizId: quizId);
       },
       binding: QuizBinding(),
+    ),
+    // Game Routes
+    GetPage(
+      name: AppRoutes.lobby,
+      page: () => const LobbyView(),
+      // binding: GameBinding(), // Removed to prevent overwriting existing controller
+    ),
+    GetPage(
+      name: AppRoutes.game,
+      page: () => const GameView(),
+      // binding: GameBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.result,
+      page: () => const ResultView(),
+      // binding: GameBinding(),
     ),
   ];
 }

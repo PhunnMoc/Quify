@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:quify/core/bindings/initial_binding.dart';
@@ -31,6 +32,13 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    // Set status bar for light theme (app-wide)
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, // Transparent background
+        statusBarIconBrightness: Brightness.dark, // Dark icons for light theme
+      ),
+    );
     _determineInitialRoute();
   }
 

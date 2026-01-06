@@ -117,7 +117,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
       Get.snackbar(
         'Lỗi',
         'Vui lòng nhập nội dung câu hỏi',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -128,7 +128,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
       Get.snackbar(
         'Lỗi',
         'Phải có ít nhất 2 đáp án',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -142,7 +142,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
       Get.snackbar(
         'Lỗi',
         'Tất cả các đáp án không được để trống',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -156,7 +156,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
       Get.snackbar(
         'Lỗi',
         'Phải có ít nhất 1 đáp án đúng',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -171,7 +171,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
         Get.snackbar(
           'Lỗi',
           'Câu hỏi đơn đáp án phải có đúng 1 đáp án đúng',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -214,7 +214,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
       _editingQuestionIndex != null
           ? 'Đã cập nhật câu hỏi'
           : 'Đã thêm câu hỏi vào danh sách',
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
       backgroundColor: Colors.green,
       colorText: Colors.white,
       duration: const Duration(seconds: 1),
@@ -255,7 +255,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
       Get.snackbar(
         'Lỗi',
         'Vui lòng chọn ít nhất 1 phân loại',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.orange,
         colorText: Colors.white,
       );
@@ -266,7 +266,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
       Get.snackbar(
         'Lỗi',
         'Chỉ được chọn tối đa 3 phân loại',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.orange,
         colorText: Colors.white,
       );
@@ -292,7 +292,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
           Get.snackbar(
             'Lỗi',
             'Không thể tạo một số câu hỏi: ${e.toString()}',
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
             backgroundColor: Colors.orange,
             colorText: Colors.white,
           );
@@ -305,7 +305,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
         Get.snackbar(
           'Thành công',
           'Đã tạo quiz thành công',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.green,
           colorText: Colors.white,
           duration: const Duration(milliseconds: 2000),
@@ -351,7 +351,8 @@ class _CreateQuizViewState extends State<CreateQuizView> {
           onPressed: () => Get.back(),
         ),
       ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppDimens.paddingM),
         child: Form(
           key: _formKey,
@@ -728,6 +729,7 @@ class _CreateQuizViewState extends State<CreateQuizView> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

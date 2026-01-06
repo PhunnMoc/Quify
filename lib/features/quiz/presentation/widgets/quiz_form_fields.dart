@@ -45,7 +45,7 @@ class _QuizFormFieldsState extends State<QuizFormFields> {
         Get.snackbar(
           'Thông báo',
           'Chưa có phân loại nào. Vui lòng tạo phân loại từ menu admin.',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.orange,
           colorText: Colors.white,
           duration: const Duration(seconds: 4),
@@ -59,7 +59,7 @@ class _QuizFormFieldsState extends State<QuizFormFields> {
         Get.snackbar(
           'Lỗi',
           'Không thể tải danh sách phân loại: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -183,7 +183,7 @@ class _QuizFormFieldsState extends State<QuizFormFields> {
                                 Get.snackbar(
                                   'Thông báo',
                                   'Chỉ được chọn tối đa 3 phân loại',
-                                  snackPosition: SnackPosition.BOTTOM,
+                                  snackPosition: SnackPosition.TOP,
                                   backgroundColor: Colors.orange,
                                   colorText: Colors.white,
                                 );

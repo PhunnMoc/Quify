@@ -5,6 +5,7 @@ import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_strings.dart';
 import 'package:quify/features/auth/controller/auth_controller.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
+import 'package:quify/features/game/controller/game_controller.dart';
 import 'package:quify/features/home/controller/home_controller.dart';
 import 'package:quify/features/home/presentation/views/tabs/home_tab.dart';
 import 'package:quify/features/home/presentation/views/tabs/library_tab.dart';
@@ -121,7 +122,7 @@ class _HomeViewContent extends GetView<HomeController> {
                   bottom: bottomNavTop - 32,
                   child: GestureDetector(
                     onTap: () {
-                      Get.toNamed(AppRoutes.createQuiz);
+                      _showActionMenu(context);
                     },
                     child: Container(
                       width: 64,
@@ -150,6 +151,93 @@ class _HomeViewContent extends GetView<HomeController> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showActionMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.create, color: AppTheme.primaryColor),
+                title: const Text('Tạo Quiz'),
+                onTap: () {
+                  Get.back();
+                  Get.toNamed(AppRoutes.createQuiz);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.play_arrow, color: AppTheme.primaryColor),
+                title: const Text('Tổ chức Game'),
+                subtitle: const Text('Chọn quiz từ thư viện để tổ chức'),
+                onTap: () {
+                  Get.back();
+                  // Switch to Library tab (index 2)
+                  controller.changeTab(2);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.login, color: AppTheme.primaryColor),
+                title: const Text('Tham gia Game'),
+                subtitle: const Text('Nhập mã PIN để vào phòng'),
+                onTap: () {
+                  Get.back();
+                  _showJoinGameDialog(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showJoinGameDialog(BuildContext context) {
+    final TextEditingController pinController = TextEditingController();
+    Get.defaultDialog(
+      title: "Tham gia Game",
+      content: Column(
+        children: [
+          const Text("Nhập mã PIN để tham gia:"),
+          const SizedBox(height: 10),
+          TextField(
+            controller: pinController,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 24, letterSpacing: 5),
+            decoration: const InputDecoration(
+              hintText: "PIN",
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      textConfirm: "Tham gia",
+      textCancel: "Hủy",
+      confirmTextColor: Colors.white,
+      onConfirm: () {
+        if (pinController.text.isNotEmpty) {
+           Get.back();
+           // Initialize GameController if not already
+           // We can assume GameController is not permanently in memory, 
+           // so we might need to rely on GameBinding when navigating to Lobby.
+           // BUT joinGame logic is in GameController.
+           // We need to instantiate it to call joinGame.
+           // Or we can navigate to a "JoinView" which has the controller.
+           // Here I will instantiate it temporarily or use a helper.
+           // Actually, the cleanest way is to use a binding or put it.
+           final gameController = Get.put(GameController()); // Put it in memory
+           gameController.joinGame(pinController.text);
+        }
+      },
     );
   }
 }

@@ -70,7 +70,7 @@ class QuizController extends GetxController {
         Get.snackbar(
           'Lỗi',
           'Vui lòng đăng nhập',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -81,7 +81,7 @@ class QuizController extends GetxController {
         Get.snackbar(
           'Lỗi',
           'Vui lòng chọn ít nhất 1 phân loại',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.orange,
           colorText: Colors.white,
         );
@@ -92,7 +92,7 @@ class QuizController extends GetxController {
         Get.snackbar(
           'Lỗi',
           'Chỉ được chọn tối đa 3 phân loại',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.orange,
           colorText: Colors.white,
         );
@@ -124,7 +124,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể tạo quiz: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -143,7 +143,7 @@ class QuizController extends GetxController {
         Get.snackbar(
           'Lỗi',
           'Vui lòng đăng nhập',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -154,7 +154,7 @@ class QuizController extends GetxController {
         Get.snackbar(
           'Lỗi',
           'Vui lòng chọn ít nhất 1 phân loại',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.orange,
           colorText: Colors.white,
         );
@@ -165,7 +165,7 @@ class QuizController extends GetxController {
         Get.snackbar(
           'Lỗi',
           'Chỉ được chọn tối đa 3 phân loại',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.orange,
           colorText: Colors.white,
         );
@@ -195,7 +195,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể cập nhật quiz: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -213,7 +213,7 @@ class QuizController extends GetxController {
         Get.snackbar(
           'Lỗi',
           'Không tìm thấy quiz',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -231,7 +231,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể tải quiz: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -254,7 +254,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể tải câu hỏi: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -284,7 +284,7 @@ class QuizController extends GetxController {
             Get.snackbar(
               'Lỗi',
               'Không thể tải danh sách quiz: ${error.toString()}',
-              snackPosition: SnackPosition.BOTTOM,
+              snackPosition: SnackPosition.TOP,
               backgroundColor: Colors.red,
               colorText: Colors.white,
             );
@@ -318,7 +318,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Thông báo',
         'Quiz phải có ít nhất 2 đáp án',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.orange,
         colorText: Colors.white,
       );
@@ -331,7 +331,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Phải có ít nhất 2 đáp án',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -343,7 +343,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Phải có ít nhất 1 đáp án đúng',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -356,7 +356,7 @@ class QuizController extends GetxController {
         Get.snackbar(
           'Lỗi',
           'Câu hỏi đơn đáp án chỉ được có 1 đáp án đúng',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -405,7 +405,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể tạo câu hỏi: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -443,7 +443,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể cập nhật câu hỏi: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -477,7 +477,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Thành công',
         'Đã xóa câu hỏi',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -485,7 +485,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể xóa câu hỏi: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -522,7 +522,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Thành công',
         'Đã xóa quiz',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
@@ -531,7 +531,7 @@ class QuizController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể xóa quiz: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

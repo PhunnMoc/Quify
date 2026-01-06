@@ -180,7 +180,7 @@ class AdminController extends GetxController {
       Get.snackbar(
         'Thành công',
         'Đã tạo $createdCount category mới. Bỏ qua $skippedCount category đã tồn tại.',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
@@ -189,7 +189,7 @@ class AdminController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể tạo categories: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

@@ -38,7 +38,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Không thể tải thông tin người dùng',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -117,7 +117,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Thành công',
         'Cập nhật hồ sơ thành công',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
         duration: const Duration(seconds: 2),
@@ -127,7 +127,7 @@ class ProfileController extends GetxController {
       Get.snackbar(
         'Lỗi',
         e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

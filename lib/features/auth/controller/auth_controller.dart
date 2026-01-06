@@ -73,7 +73,7 @@ class AuthController extends GetxController {
           Get.snackbar(
             'Lỗi',
             'Mật khẩu admin không đúng',
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
             backgroundColor: Colors.red,
             colorText: Colors.white,
           );
@@ -92,7 +92,7 @@ class AuthController extends GetxController {
           Get.snackbar(
             'Thông báo',
             'Vui lòng xác thực email trước khi đăng nhập',
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
             backgroundColor: Colors.orange,
             colorText: Colors.white,
           );
@@ -104,7 +104,7 @@ class AuthController extends GetxController {
           Get.snackbar(
             'Lỗi',
             'Không tìm thấy thông tin người dùng',
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
             backgroundColor: Colors.red,
             colorText: Colors.white,
           );
@@ -115,6 +115,17 @@ class AuthController extends GetxController {
           Get.offAllNamed(AppRoutes.setupProfile);
           return;
         }
+
+        // Show welcome message after successful login
+        final fullName = userData['fullName'] ?? 'Người dùng';
+        Get.snackbar(
+          'Chào mừng',
+          'Chào mừng $fullName',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
 
         clearControllers();
         Get.offAllNamed(AppRoutes.home);
@@ -133,7 +144,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Lỗi',
         message,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -141,7 +152,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Đăng nhập thất bại: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -176,7 +187,7 @@ class AuthController extends GetxController {
         Get.snackbar(
           'Thành công',
           'Đăng ký thành công. Vui lòng xác thực email.',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.green,
           colorText: Colors.white,
           duration: const Duration(seconds: 3),
@@ -197,7 +208,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Lỗi',
         message,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -205,7 +216,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Đăng ký thất bại: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -233,7 +244,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Thành công',
         'Email xác thực đã được gửi đến ${user.email}. Vui lòng kiểm tra hộp thư (bao gồm thư mục Spam).',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
         duration: const Duration(seconds: 5),
@@ -252,7 +263,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Lỗi',
         errorMessage,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
         duration: const Duration(seconds: 4),
@@ -297,7 +308,7 @@ class AuthController extends GetxController {
             Get.snackbar(
               'Lỗi',
               'Không tìm thấy thông tin người dùng',
-              snackPosition: SnackPosition.BOTTOM,
+              snackPosition: SnackPosition.TOP,
               backgroundColor: Colors.red,
               colorText: Colors.white,
             );
@@ -314,7 +325,7 @@ class AuthController extends GetxController {
         Get.snackbar(
           'Thông báo',
           'Email chưa được xác thực. Vui lòng kiểm tra hộp thư.',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.orange,
           colorText: Colors.white,
         );
@@ -323,7 +334,7 @@ class AuthController extends GetxController {
       Get.snackbar(
         'Lỗi',
         'Có lỗi xảy ra: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );

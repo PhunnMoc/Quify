@@ -6,6 +6,7 @@ import 'package:quify/core/values/app_dimens.dart';
 import 'package:quify/core/values/app_strings.dart';
 import 'package:quify/features/admin/data/providers/category_provider.dart';
 import 'package:quify/features/auth/controller/auth_controller.dart';
+import 'package:quify/features/game/controller/game_controller.dart';
 import 'package:quify/features/quiz/controller/quiz_controller.dart';
 import 'package:quify/features/quiz/data/models/quiz_model.dart';
 import 'package:quify/routes/app_routes.dart';
@@ -180,7 +181,12 @@ class _QuizCardState extends State<_QuizCard> {
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(AppDimens.paddingM),
+          padding: const EdgeInsets.fromLTRB(
+            AppDimens.paddingM,
+            AppDimens.paddingM,
+            AppDimens.paddingM,
+            AppDimens.paddingS,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -233,11 +239,12 @@ class _QuizCardState extends State<_QuizCard> {
                   }).toList(),
                 ),
               ],
-              const SizedBox(height: AppDimens.marginM),
+              const SizedBox(height: AppDimens.marginS),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Icon(Icons.help_outline,
-                      size: 16, color: AppTheme.textSecondary),
+                      size: AppDimens.iconS, color: AppTheme.textSecondary),
                   const SizedBox(width: AppDimens.marginXS),
                   Text(
                     '${widget.quiz.totalQuestions} câu hỏi',
@@ -246,9 +253,9 @@ class _QuizCardState extends State<_QuizCard> {
                       color: AppTheme.textSecondary,
                     ),
                   ),
-                  const SizedBox(width: AppDimens.marginM),
+                  const SizedBox(width: AppDimens.marginL),
                   Icon(Icons.play_circle_outline,
-                      size: 16, color: AppTheme.textSecondary),
+                      size: AppDimens.iconS, color: AppTheme.textSecondary),
                   const SizedBox(width: AppDimens.marginXS),
                   Text(
                     '${widget.quiz.totalPlays} lượt chơi',
@@ -256,6 +263,18 @@ class _QuizCardState extends State<_QuizCard> {
                       fontSize: 12,
                       color: AppTheme.textSecondary,
                     ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.play_arrow_rounded, color: AppTheme.primaryColor),
+                    iconSize: AppDimens.iconL,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'Tổ chức Game',
+                    onPressed: () {
+                      final gameController = Get.put(GameController());
+                      gameController.createGame(widget.quiz);
+                    },
                   ),
                 ],
               ),

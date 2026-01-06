@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Application theme configuration
 /// Defines colors, text styles, and Material 3 theme for the quiz app
@@ -29,12 +30,17 @@ class AppTheme {
         background: backgroundColor,
       ),
       scaffoldBackgroundColor: backgroundColor,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: textPrimary,
-        titleTextStyle: TextStyle(
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness:
+              Brightness.dark, // Dark icons for light theme
+        ),
+        titleTextStyle: const TextStyle(
           color: textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.bold,
