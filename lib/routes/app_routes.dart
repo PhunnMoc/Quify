@@ -11,4 +11,8 @@ class AppRoutes {
   static const String createQuiz = '/create-quiz';
   static const String quizDetail = '/quiz-detail';
   static const String editQuiz = '/edit-quiz';
+  // Game routes
+  static const String lobby = '/lobby';
+  static const String game = '/game';
+  static const String result = '/result';
 }

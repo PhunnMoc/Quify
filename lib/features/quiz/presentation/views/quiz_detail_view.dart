@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_dimens.dart';
 import 'package:quify/features/admin/data/providers/category_provider.dart';
+import 'package:quify/features/game/controller/game_controller.dart';
 import 'package:quify/features/quiz/controller/quiz_controller.dart';
 import 'package:quify/features/quiz/data/models/quiz_model.dart';
 import 'package:quify/features/quiz/data/models/question_model.dart';
@@ -98,7 +99,22 @@ class _QuizDetailViewState extends State<QuizDetailView> {
             ),
         ],
       ),
-      body: FutureBuilder<QuizModel?>(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // Check if quiz is loaded
+          _quizFuture.then((quiz) {
+            if (quiz != null) {
+              final gameController = Get.put(GameController());
+              gameController.createGame(quiz);
+            }
+          });
+        },
+        label: const Text("Tổ chức Game"),
+        icon: const Icon(Icons.play_arrow),
+        backgroundColor: AppTheme.primaryColor,
+      ),
+      body: SafeArea(
+        child: FutureBuilder<QuizModel?>(
         future: _quizFuture,
         builder: (context, quizSnapshot) {
           if (!quizSnapshot.hasData) {
@@ -206,6 +222,7 @@ class _QuizDetailViewState extends State<QuizDetailView> {
                 ),
               ));
         },
+        ),
       ),
     );
   }

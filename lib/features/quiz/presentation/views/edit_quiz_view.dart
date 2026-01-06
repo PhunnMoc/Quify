@@ -106,7 +106,7 @@ class _EditQuizViewState extends State<EditQuizView> {
       Get.snackbar(
         'Lỗi',
         'Vui lòng nhập nội dung câu hỏi',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -117,7 +117,7 @@ class _EditQuizViewState extends State<EditQuizView> {
       Get.snackbar(
         'Lỗi',
         'Phải có ít nhất 2 đáp án',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -131,7 +131,7 @@ class _EditQuizViewState extends State<EditQuizView> {
       Get.snackbar(
         'Lỗi',
         'Tất cả các đáp án không được để trống',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -145,7 +145,7 @@ class _EditQuizViewState extends State<EditQuizView> {
       Get.snackbar(
         'Lỗi',
         'Phải có ít nhất 1 đáp án đúng',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -160,7 +160,7 @@ class _EditQuizViewState extends State<EditQuizView> {
         Get.snackbar(
           'Lỗi',
           'Câu hỏi đơn đáp án phải có đúng 1 đáp án đúng',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -206,7 +206,7 @@ class _EditQuizViewState extends State<EditQuizView> {
       Get.snackbar(
         'Thành công',
         'Cập nhật quiz thành công',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
         duration: const Duration(milliseconds: 2000),
@@ -232,7 +232,8 @@ class _EditQuizViewState extends State<EditQuizView> {
           onPressed: () => Get.back(),
         ),
       ),
-      body: Obx(
+      body: SafeArea(
+        child: Obx(
         () => _quizController.isLoading.value
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
@@ -679,6 +680,7 @@ class _EditQuizViewState extends State<EditQuizView> {
                   ],
                 ),
               ),
+        ),
       ),
     );
   }

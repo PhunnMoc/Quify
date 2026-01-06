@@ -129,7 +129,7 @@ class SetupProfileView extends GetView<AuthController> {
         Get.snackbar(
           'Lỗi',
           'Không tìm thấy thông tin người dùng',
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -144,7 +144,7 @@ class SetupProfileView extends GetView<AuthController> {
         Get.snackbar(
           'Lỗi',
           AppStrings.usernameExists,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
@@ -152,8 +152,9 @@ class SetupProfileView extends GetView<AuthController> {
       }
 
       // Setup profile (controller sẽ handle loading state)
+      final fullName = fullNameController.text.trim();
       await controller.setupProfile(
-        fullName: fullNameController.text.trim(),
+        fullName: fullName,
         username: usernameController.text.trim(),
       );
 
@@ -161,7 +162,15 @@ class SetupProfileView extends GetView<AuthController> {
       fullNameController.clear();
       usernameController.clear();
 
-      // Welcome message will be shown in HomeTab
+      // Show welcome message after successful profile setup
+      Get.snackbar(
+        'Chào mừng',
+        'Chào mừng $fullName',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
 
       // Navigate to home
       Get.offAllNamed(AppRoutes.home);
@@ -169,7 +178,7 @@ class SetupProfileView extends GetView<AuthController> {
       Get.snackbar(
         'Lỗi',
         'Thiết lập hồ sơ thất bại: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
