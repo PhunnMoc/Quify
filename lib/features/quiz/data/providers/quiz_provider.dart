@@ -2,14 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:quify/features/quiz/data/models/quiz_model.dart';
 import 'package:quify/features/quiz/data/models/question_model.dart';
 
-/// Provider for Firestore operations related to quizzes and questions
+// Provider for Firestore operations related to quizzes and questions
 class QuizProvider {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _quizzesCollection = 'quizzes';
   final String _questionsSubCollection = 'questions';
 
-  /// Creates a new quiz document in Firestore
-  /// Returns the generated document ID
+  // Creates a new quiz document in Firestore
+  // Returns the generated document ID
   Future<String> createQuiz(QuizModel quiz) async {
     final docRef = _firestore.collection(_quizzesCollection).doc();
     final data = quiz.copyWith(id: docRef.id).toMap();
@@ -17,7 +17,7 @@ class QuizProvider {
     return docRef.id;
   }
 
-  /// Updates an existing quiz document in Firestore
+  // Updates an existing quiz document in Firestore
   Future<void> updateQuiz(String quizId, QuizModel quiz) async {
     await _firestore
         .collection(_quizzesCollection)
@@ -25,8 +25,8 @@ class QuizProvider {
         .update(quiz.toMap());
   }
 
-  /// Retrieves a quiz by its document ID
-  /// Returns null if the quiz does not exist
+  // Retrieves a quiz by its document ID
+  // Returns null if the quiz does not exist
   Future<QuizModel?> getQuizById(String quizId) async {
     try {
       final doc = await _firestore
@@ -47,9 +47,9 @@ class QuizProvider {
     }
   }
 
-  /// Retrieves all quizzes owned by a specific user
-  /// Returns a stream that emits lists of quizzes ordered by creation date (newest first)
-  /// Requires Firestore index on (ownerId, createdAt)
+  // Retrieves all quizzes owned by a specific user
+  // Returns a stream that emits lists of quizzes ordered by creation date (newest first)
+  // Requires Firestore index on (ownerId, createdAt)
   Stream<List<QuizModel>> getUserQuizzes(String userId) {
     return _firestore
         .collection(_quizzesCollection)
@@ -82,8 +82,8 @@ class QuizProvider {
         });
   }
 
-  /// Retrieves all public quizzes
-  /// Returns a stream ordered by creation date (newest first)
+  // Retrieves all public quizzes
+  // Returns a stream ordered by creation date (newest first)
   Stream<List<QuizModel>> getPublicQuizzes() {
     return _firestore
         .collection(_quizzesCollection)
@@ -95,8 +95,8 @@ class QuizProvider {
             .toList());
   }
 
-  /// Retrieves public quizzes that match any of the provided category IDs
-  /// Returns an empty stream if no category IDs are provided
+  // Retrieves public quizzes that match any of the provided category IDs
+  // Returns an empty stream if no category IDs are provided
   Stream<List<QuizModel>> getQuizzesByCategories(List<String> categoryIds) {
     if (categoryIds.isEmpty) {
       return Stream.value([]);
@@ -112,7 +112,7 @@ class QuizProvider {
             .toList());
   }
 
-  /// Deletes a quiz and all its associated questions
+  // Deletes a quiz and all its associated questions
   Future<void> deleteQuiz(String quizId) async {
     final questionsSnapshot = await _firestore
         .collection(_quizzesCollection)
@@ -128,8 +128,8 @@ class QuizProvider {
     await _firestore.collection(_quizzesCollection).doc(quizId).delete();
   }
 
-  /// Creates a new question in a quiz's questions subcollection
-  /// Returns the generated document ID
+  // Creates a new question in a quiz's questions subcollection
+  // Returns the generated document ID
   Future<String> createQuestion(String quizId, QuestionModel question) async {
     final docRef = _firestore
         .collection(_quizzesCollection)
@@ -141,7 +141,7 @@ class QuizProvider {
     return docRef.id;
   }
 
-  /// Updates an existing question in a quiz
+  // Updates an existing question in a quiz
   Future<void> updateQuestion(
       String quizId, String questionId, QuestionModel question) async {
     await _firestore
@@ -152,7 +152,7 @@ class QuizProvider {
         .update(question.toMap());
   }
 
-  /// Retrieves all questions for a quiz, ordered by question order
+  // Retrieves all questions for a quiz, ordered by question order
   Future<List<QuestionModel>> getQuizQuestions(String quizId) async {
     final snapshot = await _firestore
         .collection(_quizzesCollection)
@@ -166,7 +166,7 @@ class QuizProvider {
         .toList();
   }
 
-  /// Retrieves a real-time stream of questions for a quiz, ordered by question order
+  // Retrieves a real-time stream of questions for a quiz, ordered by question order
   Stream<List<QuestionModel>> getQuizQuestionsStream(String quizId) {
     return _firestore
         .collection(_quizzesCollection)
@@ -179,7 +179,7 @@ class QuizProvider {
             .toList());
   }
 
-  /// Deletes a question from a quiz
+  // Deletes a question from a quiz
   Future<void> deleteQuestion(String quizId, String questionId) async {
     await _firestore
         .collection(_quizzesCollection)
@@ -189,7 +189,7 @@ class QuizProvider {
         .delete();
   }
 
-  /// Updates the total number of questions in a quiz
+  // Updates the total number of questions in a quiz
   Future<void> updateQuizQuestionCount(String quizId, int count) async {
     await _firestore
         .collection(_quizzesCollection)
@@ -197,8 +197,8 @@ class QuizProvider {
         .update({'totalQuestions': count});
   }
 
-  /// Reorders questions using batch update for better performance
-  /// Updates the order field of multiple questions in a single Firestore write operation
+  // Reorders questions using batch update for better performance
+  // Updates the order field of multiple questions in a single Firestore write operation
   Future<void> reorderQuestionsBatch(String quizId, List<QuestionModel> questions) async {
     final batch = _firestore.batch();
     final collectionRef = _firestore
@@ -211,6 +211,45 @@ class QuizProvider {
     }
 
     await batch.commit();
+  }
+
+  // Deletes multiple quizzes and their questions using batch operations
+  // Firestore batch limit is 500 operations, so we split into multiple batches if needed
+  Future<void> deleteQuizzes(List<String> quizIds) async {
+    WriteBatch batch = _firestore.batch();
+    int operationCount = 0;
+
+    for (final quizId in quizIds) {
+      final questionsSnapshot = await _firestore
+          .collection(_quizzesCollection)
+          .doc(quizId)
+          .collection(_questionsSubCollection)
+          .get();
+
+      for (var doc in questionsSnapshot.docs) {
+        batch.delete(doc.reference);
+        operationCount++;
+
+        if (operationCount >= 490) {
+          await batch.commit();
+          batch = _firestore.batch();
+          operationCount = 0;
+        }
+      }
+
+      batch.delete(_firestore.collection(_quizzesCollection).doc(quizId));
+      operationCount++;
+
+      if (operationCount >= 490) {
+        await batch.commit();
+        batch = _firestore.batch();
+        operationCount = 0;
+      }
+    }
+
+    if (operationCount > 0) {
+      await batch.commit();
+    }
   }
 }
 

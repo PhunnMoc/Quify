@@ -6,7 +6,7 @@ import 'package:quify/features/quiz/data/models/quiz_model.dart';
 import 'package:quify/features/quiz/data/models/question_model.dart';
 import 'package:quify/features/quiz/data/providers/quiz_provider.dart';
 
-/// Controller for managing quiz operations and state
+// Controller for managing quiz operations and state
 class QuizController extends GetxController {
   final QuizProvider _quizProvider = QuizProvider();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -29,6 +29,10 @@ class QuizController extends GetxController {
   final quizzes = <QuizModel>[].obs;
   final questions = <QuestionModel>[].obs;
 
+  // Multi-selection mode
+  final isMultiSelectionMode = false.obs;
+  final selectedQuizIds = <String>[].obs;
+
   StreamSubscription? _userQuizzesSubscription;
 
   @override
@@ -44,7 +48,7 @@ class QuizController extends GetxController {
     super.onClose();
   }
 
-  /// Resets all form controllers and state to default values
+  // Resets all form controllers and state to default values
   void clearForm() {
     titleController.clear();
     descriptionController.clear();
@@ -61,7 +65,7 @@ class QuizController extends GetxController {
     questions.clear();
   }
 
-  /// Creates a new quiz with the current form data
+  // Creates a new quiz with the current form data
   Future<String?> createQuiz() async {
     try {
       isLoading.value = true;
@@ -134,7 +138,7 @@ class QuizController extends GetxController {
     }
   }
 
-  /// Updates an existing quiz with the current form data
+  // Updates an existing quiz with the current form data
   Future<void> updateQuiz(String quizId) async {
     try {
       isLoading.value = true;
@@ -204,7 +208,7 @@ class QuizController extends GetxController {
     }
   }
 
-  /// Loads a quiz and populates the form for editing
+  // Loads a quiz and populates the form for editing
   Future<void> loadQuizForEdit(String quizId) async {
     try {
       isLoading.value = true;
@@ -240,12 +244,12 @@ class QuizController extends GetxController {
     }
   }
 
-  /// Retrieves a quiz by its ID
+  // Retrieves a quiz by its ID
   Future<QuizModel?> getQuizById(String quizId) async {
     return await _quizProvider.getQuizById(quizId);
   }
 
-  /// Loads all questions for a quiz and updates the questions list
+  // Loads all questions for a quiz and updates the questions list
   Future<void> loadQuestions(String quizId) async {
     try {
       final loadedQuestions = await _quizProvider.getQuizQuestions(quizId);
@@ -261,7 +265,7 @@ class QuizController extends GetxController {
     }
   }
 
-  /// Loads all quizzes owned by the current user
+  // Loads all quizzes owned by the current user
   void loadUserQuizzes() {
     final user = _auth.currentUser;
     if (user == null) {
@@ -293,7 +297,7 @@ class QuizController extends GetxController {
         );
   }
 
-  /// Clears all data and stops listening to streams
+  // Clears all data and stops listening to streams
   void clearDataAndStopListening() {
     _userQuizzesSubscription?.cancel();
     _userQuizzesSubscription = null;
@@ -302,7 +306,7 @@ class QuizController extends GetxController {
     currentQuizId.value = '';
   }
 
-  /// Adds a new empty option to the question options list
+  // Adds a new empty option to the question options list
   void addQuestionOption() {
     final optionId = DateTime.now().millisecondsSinceEpoch.toString();
     questionOptions.add(
@@ -310,7 +314,7 @@ class QuizController extends GetxController {
     );
   }
 
-  /// Removes a question option at the specified index
+  // Removes a question option at the specified index
   void removeQuestionOption(int index) {
     if (questionOptions.length > 2) {
       questionOptions.removeAt(index);
@@ -325,7 +329,7 @@ class QuizController extends GetxController {
     }
   }
 
-  /// Validates the question form
+  // Validates the question form
   bool _validateQuestionForm() {
     if (questionOptions.length < 2) {
       Get.snackbar(
@@ -367,7 +371,7 @@ class QuizController extends GetxController {
     return true;
   }
 
-  /// Creates a new question in a quiz with the current form data
+  // Creates a new question in a quiz with the current form data
   Future<void> createQuestion(String quizId) async {
     try {
       if (!_validateQuestionForm()) {
@@ -414,7 +418,7 @@ class QuizController extends GetxController {
     }
   }
 
-  /// Updates an existing question in a quiz with the current form data
+  // Updates an existing question in a quiz with the current form data
   Future<void> updateQuestion(String quizId, String questionId) async {
     try {
       if (!_validateQuestionForm()) {
@@ -452,7 +456,7 @@ class QuizController extends GetxController {
     }
   }
 
-  /// Deletes a question from a quiz and reorders remaining questions
+  // Deletes a question from a quiz and reorders remaining questions
   Future<void> deleteQuestion(String quizId, String questionId) async {
     try {
       isLoading.value = true;
@@ -494,7 +498,7 @@ class QuizController extends GetxController {
     }
   }
 
-  /// Populates the question form with data from an existing question for editing
+  // Populates the question form with data from an existing question for editing
   void loadQuestionForEdit(QuestionModel question) {
     questionTextController.text = question.text;
     questionImageUrlController.text = question.imageUrl ?? '';
@@ -504,7 +508,7 @@ class QuizController extends GetxController {
     questionOptions.value = question.options;
   }
 
-  /// Resets the question form to default values
+  // Resets the question form to default values
   void clearQuestionForm() {
     questionTextController.clear();
     questionImageUrlController.clear();
@@ -514,23 +518,79 @@ class QuizController extends GetxController {
     questionOptions.clear();
   }
 
-  /// Deletes a quiz and all its associated questions
-  Future<void> deleteQuiz(String quizId) async {
+  // Deletes a quiz and all its associated questions
+  // Returns true if deletion was successful, false otherwise
+  Future<bool> deleteQuiz(String quizId) async {
     try {
       isLoading.value = true;
       await _quizProvider.deleteQuiz(quizId);
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Toggles multi-selection mode
+  void toggleSelectionMode(String? initialQuizId) {
+    isMultiSelectionMode.value = !isMultiSelectionMode.value;
+    selectedQuizIds.clear();
+    if (isMultiSelectionMode.value && initialQuizId != null) {
+      selectedQuizIds.add(initialQuizId);
+    }
+  }
+
+  // Toggles selection of a specific quiz
+  // Does not automatically exit multi-select mode when list becomes empty
+  void toggleQuizSelection(String quizId) {
+    if (selectedQuizIds.contains(quizId)) {
+      selectedQuizIds.remove(quizId);
+    } else {
+      selectedQuizIds.add(quizId);
+    }
+  }
+
+  // Checks if all quizzes are currently selected
+  bool get isAllSelected {
+    if (quizzes.isEmpty) return false;
+    return selectedQuizIds.length == quizzes.length;
+  }
+
+  // Toggles selection of all quizzes
+  // If all are selected, deselects all but keeps multi-select mode active
+  // If not all are selected, selects all
+  void toggleSelectAll() {
+    if (isAllSelected) {
+      selectedQuizIds.clear();
+    } else {
+      selectedQuizIds.value = quizzes.map((quiz) => quiz.id).toList();
+    }
+  }
+
+  // Deletes all selected quizzes
+  Future<void> deleteSelectedQuizzes() async {
+    if (selectedQuizIds.isEmpty) return;
+
+    try {
+      isLoading.value = true;
+      final count = selectedQuizIds.length;
+      await _quizProvider.deleteQuizzes(selectedQuizIds.toList());
+
       Get.snackbar(
         'Thành công',
-        'Đã xóa quiz',
+        'Đã xóa $count quiz',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
-      loadUserQuizzes();
+
+      isMultiSelectionMode.value = false;
+      selectedQuizIds.clear();
     } catch (e) {
       Get.snackbar(
         'Lỗi',
-        'Không thể xóa quiz: ${e.toString()}',
+        'Không thể xóa các quiz đã chọn: ${e.toString()}',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -538,5 +598,11 @@ class QuizController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Exits selection mode
+  void exitSelectionMode() {
+    isMultiSelectionMode.value = false;
+    selectedQuizIds.clear();
   }
 }
