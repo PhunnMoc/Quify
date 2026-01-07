@@ -11,6 +11,7 @@ class QuizModel {
   final bool isPublic;
   final DateTime createdAt;
   final List<String> categoryIds;
+  final List<String> keywords; // For search
   final int totalQuestions;
   final int totalPlays;
 
@@ -24,6 +25,7 @@ class QuizModel {
     required this.isPublic,
     required this.createdAt,
     required this.categoryIds,
+    this.keywords = const [],
     required this.totalQuestions,
     this.totalPlays = 0,
   });
@@ -39,6 +41,7 @@ class QuizModel {
       'isPublic': isPublic,
       'createdAt': Timestamp.fromDate(createdAt),
       'categoryIds': categoryIds,
+      'keywords': keywords,
       'totalQuestions': totalQuestions,
       'totalPlays': totalPlays,
     };
@@ -72,6 +75,10 @@ class QuizModel {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      keywords: (map['keywords'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       totalQuestions: map['totalQuestions'] as int? ?? 0,
       totalPlays: map['totalPlays'] as int? ?? 0,
     );
@@ -87,6 +94,7 @@ class QuizModel {
     bool? isPublic,
     DateTime? createdAt,
     List<String>? categoryIds,
+    List<String>? keywords,
     int? totalQuestions,
     int? totalPlays,
   }) {
@@ -100,6 +108,7 @@ class QuizModel {
       isPublic: isPublic ?? this.isPublic,
       createdAt: createdAt ?? this.createdAt,
       categoryIds: categoryIds ?? this.categoryIds,
+      keywords: keywords ?? this.keywords,
       totalQuestions: totalQuestions ?? this.totalQuestions,
       totalPlays: totalPlays ?? this.totalPlays,
     );

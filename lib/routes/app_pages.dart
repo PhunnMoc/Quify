@@ -4,7 +4,6 @@ import 'package:quify/features/auth/presentation/views/email_verification_view.d
 import 'package:quify/features/auth/presentation/views/login_view.dart';
 import 'package:quify/features/auth/presentation/views/register_view.dart';
 import 'package:quify/features/auth/presentation/views/setup_profile_view.dart';
-import 'package:quify/features/game/binding/game_binding.dart';
 import 'package:quify/features/game/presentation/views/game_view.dart';
 import 'package:quify/features/game/presentation/views/lobby_view.dart';
 import 'package:quify/features/game/presentation/views/result_view.dart';
@@ -16,6 +15,7 @@ import 'package:quify/features/quiz/binding/quiz_binding.dart';
 import 'package:quify/features/quiz/presentation/views/create_quiz_view.dart';
 import 'package:quify/features/quiz/presentation/views/edit_quiz_view.dart';
 import 'package:quify/features/quiz/presentation/views/quiz_detail_view.dart';
+import 'package:quify/features/quiz/presentation/views/hot_quizzes_view.dart';
 import 'package:quify/routes/app_routes.dart';
 
 /// Application route configuration
@@ -78,6 +78,7 @@ class AppPages {
       },
       binding: QuizBinding(),
     ),
+    GetPage(name: AppRoutes.hotQuizzes, page: () => const HotQuizzesView()),
     // Game Routes
     GetPage(
       name: AppRoutes.lobby,

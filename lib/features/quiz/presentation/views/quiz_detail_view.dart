@@ -5,6 +5,7 @@ import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_dimens.dart';
 import 'package:quify/features/admin/data/providers/category_provider.dart';
 import 'package:quify/features/game/controller/game_controller.dart';
+import 'package:quify/features/quiz/controller/public_quiz_controller.dart';
 import 'package:quify/features/quiz/controller/quiz_controller.dart';
 import 'package:quify/features/quiz/data/models/quiz_model.dart';
 import 'package:quify/features/quiz/data/models/question_model.dart';
@@ -22,6 +23,8 @@ class QuizDetailView extends StatefulWidget {
 class _QuizDetailViewState extends State<QuizDetailView> {
   late Future<QuizModel?> _quizFuture;
   final QuizController _quizController = Get.put(QuizController(), tag: 'quiz');
+  // Inject PublicQuizController for cloning functionality
+  final PublicQuizController _publicQuizController = Get.put(PublicQuizController());
   final CategoryProvider _categoryProvider = CategoryProvider();
   List<Map<String, dynamic>> _categories = [];
   bool _loadingCategories = true;
@@ -134,23 +137,66 @@ class _QuizDetailViewState extends State<QuizDetailView> {
                     ],
                   );
                 }
+                // Show Clone button for non-owners
+                if (snapshot.hasData && snapshot.data?.ownerId != user.uid) {
+                  return Obx(() {
+                    if (_publicQuizController.isCloning.value) {
+                      return const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    }
+                    return IconButton(
+                      icon: const Icon(Icons.copy),
+                      tooltip: 'Clone Quiz',
+                      onPressed: () {
+                         Get.defaultDialog(
+                          title: 'Clone Quiz',
+                          middleText: 'Bạn có muốn sao chép quiz này về thư viện của mình không?',
+                          textConfirm: 'Clone',
+                          textCancel: 'Hủy',
+                          confirmTextColor: Colors.white,
+                          onConfirm: () async {
+                            Get.back();
+                            await _publicQuizController.cloneQuiz(snapshot.data!);
+                          },
+                        );
+                      },
+                    );
+                  });
+                }
                 return const SizedBox.shrink();
               },
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          _quizFuture.then((quiz) {
-            if (quiz != null) {
-              final gameController = Get.put(GameController());
-              gameController.createGame(quiz);
-            }
-          });
+      floatingActionButton: FutureBuilder<QuizModel?>(
+        future: _quizFuture,
+        builder: (context, snapshot) {
+          final user = FirebaseAuth.instance.currentUser;
+          // Only show 'Organize Game' button if user is the owner
+          if (snapshot.hasData && snapshot.data?.ownerId == user?.uid) {
+            return FloatingActionButton.extended(
+              onPressed: () {
+                if (snapshot.data != null) {
+                  final gameController = Get.put(GameController());
+                  gameController.createGame(snapshot.data!);
+                }
+              },
+              label: const Text(
+                "Tổ chức Game",
+                style: TextStyle(color: Colors.white),
+              ),
+              icon: const Icon(Icons.play_arrow, color: Colors.white),
+              backgroundColor: AppTheme.primaryColor,
+            );
+          }
+          return const SizedBox.shrink();
         },
-        label: const Text("Tổ chức Game"),
-        icon: const Icon(Icons.play_arrow),
-        backgroundColor: AppTheme.primaryColor,
       ),
       body: SafeArea(
         child: FutureBuilder<QuizModel?>(
