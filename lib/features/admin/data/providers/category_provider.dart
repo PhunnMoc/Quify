@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:quify/features/admin/data/models/category_model.dart';
 
 /// Provider for Category operations in Firestore
 class CategoryProvider {
@@ -19,9 +20,11 @@ class CategoryProvider {
   }
 
   /// Creates a category document with auto-generated ID
-  Future<String> createCategory(Map<String, dynamic> categoryData) async {
+  Future<String> createCategory(CategoryModel category) async {
     final docRef = _firestore.collection(_categoriesCollection).doc();
-    await docRef.set(categoryData);
+    // Ensure ID is set
+    final data = category.copyWith(id: docRef.id).toMap();
+    await docRef.set(data);
     return docRef.id;
   }
 
@@ -37,7 +40,7 @@ class CategoryProvider {
   }
 
   /// Gets all active categories
-  Future<List<Map<String, dynamic>>> getAllCategories() async {
+  Future<List<CategoryModel>> getAllCategories() async {
     try {
       // Thử query với orderBy trước
       try {
@@ -48,11 +51,10 @@ class CategoryProvider {
             .get();
         return querySnapshot.docs.map((doc) {
           final data = doc.data();
-          // Đảm bảo có id - ưu tiên id từ data, nếu không thì dùng doc.id
           if (!data.containsKey('id') || data['id'] == null) {
             data['id'] = doc.id;
           }
-          return data;
+          return CategoryModel.fromMap(data);
         }).toList();
       } catch (e) {
         // Nếu lỗi do thiếu index, thử query không có orderBy
@@ -66,14 +68,10 @@ class CategoryProvider {
             if (!data.containsKey('id') || data['id'] == null) {
               data['id'] = doc.id;
             }
-            return data;
+            return CategoryModel.fromMap(data);
           }).toList();
           // Sort manually
-          categories.sort((a, b) {
-            final priorityA = a['orderPriority'] as int? ?? 999;
-            final priorityB = b['orderPriority'] as int? ?? 999;
-            return priorityA.compareTo(priorityB);
-          });
+          categories.sort((a, b) => a.orderPriority.compareTo(b.orderPriority));
           return categories;
         }
         rethrow;
@@ -88,16 +86,44 @@ class CategoryProvider {
         if (!data.containsKey('id') || data['id'] == null) {
           data['id'] = doc.id;
         }
-        return data;
+        return CategoryModel.fromMap(data);
       }).toList();
     }
   }
 
+  /// Gets top categories by priority (limit default 10)
+  Future<List<CategoryModel>> getTopCategories({int limit = 10}) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection(_categoriesCollection)
+          .where('isActive', isEqualTo: true)
+          .orderBy('orderPriority')
+          .limit(limit)
+          .get();
+      
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        if (!data.containsKey('id') || data['id'] == null) {
+          data['id'] = doc.id;
+        }
+        return CategoryModel.fromMap(data);
+      }).toList();
+    } catch (e) {
+      // Fallback if index missing
+      final all = await getAllCategories();
+      return all.take(limit).toList();
+    }
+  }
+
   /// Gets category by ID
-  Future<Map<String, dynamic>?> getCategoryById(String id) async {
+  Future<CategoryModel?> getCategoryById(String id) async {
     final doc = await _firestore.collection(_categoriesCollection).doc(id).get();
     if (doc.exists) {
-      return doc.data();
+      final data = doc.data()!;
+      if (!data.containsKey('id') || data['id'] == null) {
+        data['id'] = doc.id;
+      }
+      return CategoryModel.fromMap(data);
     }
     return null;
   }

@@ -8,21 +8,49 @@ class QuizProvider {
   final String _quizzesCollection = 'quizzes';
   final String _questionsSubCollection = 'questions';
 
+  // Helper to generate keywords for search
+  List<String> _generateKeywords(String title) {
+    final lowerTitle = title.toLowerCase();
+    final words = lowerTitle.split(' ').where((w) => w.isNotEmpty).toList();
+    return words;
+  }
+
   // Creates a new quiz document in Firestore
   // Returns the generated document ID
   Future<String> createQuiz(QuizModel quiz) async {
     final docRef = _firestore.collection(_quizzesCollection).doc();
-    final data = quiz.copyWith(id: docRef.id).toMap();
-    await docRef.set(data);
+
+    // Generate keywords if not provided
+    List<String> keywords = quiz.keywords;
+    if (keywords.isEmpty) {
+      keywords = _generateKeywords(quiz.title);
+    }
+
+    final data = quiz.copyWith(id: docRef.id, keywords: keywords).toMap();
+
+    final batch = _firestore.batch();
+    batch.set(docRef, data);
+
+    // Increment totalQuizzes for each category
+    for (final categoryId in quiz.categoryIds) {
+      final categoryRef = _firestore.collection('categories').doc(categoryId);
+      batch.update(categoryRef, {'totalQuizzes': FieldValue.increment(1)});
+    }
+
+    await batch.commit();
     return docRef.id;
   }
 
   // Updates an existing quiz document in Firestore
   Future<void> updateQuiz(String quizId, QuizModel quiz) async {
+    // Regenerate keywords based on title
+    final keywords = _generateKeywords(quiz.title);
+    final updatedQuiz = quiz.copyWith(keywords: keywords);
+
     await _firestore
         .collection(_quizzesCollection)
         .doc(quizId)
-        .update(quiz.toMap());
+        .update(updatedQuiz.toMap());
   }
 
   // Retrieves a quiz by its document ID
@@ -35,7 +63,9 @@ class QuizProvider {
           .get();
       if (doc.exists) {
         final data = doc.data()!;
-        if (!data.containsKey('id') || data['id'] == null || data['id'].toString().isEmpty) {
+        if (!data.containsKey('id') ||
+            data['id'] == null ||
+            data['id'].toString().isEmpty) {
           data['id'] = doc.id;
         }
         return QuizModel.fromMap(data);
@@ -62,8 +92,8 @@ class QuizProvider {
                 .map((doc) {
                   try {
                     final data = doc.data();
-                    if (!data.containsKey('id') || 
-                        data['id'] == null || 
+                    if (!data.containsKey('id') ||
+                        data['id'] == null ||
                         data['id'].toString().isEmpty) {
                       data['id'] = doc.id;
                     }
@@ -90,9 +120,11 @@ class QuizProvider {
         .where('isPublic', isEqualTo: true)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => QuizModel.fromMap(doc.data()))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => QuizModel.fromMap(doc.data()))
+              .toList(),
+        );
   }
 
   // Retrieves public quizzes that match any of the provided category IDs
@@ -107,9 +139,11 @@ class QuizProvider {
         .where('categoryIds', arrayContainsAny: categoryIds)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => QuizModel.fromMap(doc.data()))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => QuizModel.fromMap(doc.data()))
+              .toList(),
+        );
   }
 
   // Deletes a quiz and all its associated questions
@@ -119,7 +153,7 @@ class QuizProvider {
         .doc(quizId)
         .collection(_questionsSubCollection)
         .get();
-    
+
     final batch = _firestore.batch();
     for (var doc in questionsSnapshot.docs) {
       batch.delete(doc.reference);
@@ -143,7 +177,10 @@ class QuizProvider {
 
   // Updates an existing question in a quiz
   Future<void> updateQuestion(
-      String quizId, String questionId, QuestionModel question) async {
+    String quizId,
+    String questionId,
+    QuestionModel question,
+  ) async {
     await _firestore
         .collection(_quizzesCollection)
         .doc(quizId)
@@ -160,7 +197,7 @@ class QuizProvider {
         .collection(_questionsSubCollection)
         .orderBy('order')
         .get();
-    
+
     return snapshot.docs
         .map((doc) => QuestionModel.fromMap(doc.data()))
         .toList();
@@ -174,9 +211,11 @@ class QuizProvider {
         .collection(_questionsSubCollection)
         .orderBy('order')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => QuestionModel.fromMap(doc.data()))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => QuestionModel.fromMap(doc.data()))
+              .toList(),
+        );
   }
 
   // Deletes a question from a quiz
@@ -191,15 +230,17 @@ class QuizProvider {
 
   // Updates the total number of questions in a quiz
   Future<void> updateQuizQuestionCount(String quizId, int count) async {
-    await _firestore
-        .collection(_quizzesCollection)
-        .doc(quizId)
-        .update({'totalQuestions': count});
+    await _firestore.collection(_quizzesCollection).doc(quizId).update({
+      'totalQuestions': count,
+    });
   }
 
   // Reorders questions using batch update for better performance
   // Updates the order field of multiple questions in a single Firestore write operation
-  Future<void> reorderQuestionsBatch(String quizId, List<QuestionModel> questions) async {
+  Future<void> reorderQuestionsBatch(
+    String quizId,
+    List<QuestionModel> questions,
+  ) async {
     final batch = _firestore.batch();
     final collectionRef = _firestore
         .collection(_quizzesCollection)
@@ -251,5 +292,196 @@ class QuizProvider {
       await batch.commit();
     }
   }
-}
 
+  // Retrieves hot quizzes (most played) that are public
+  // Limit defaults to 5
+  Future<List<QuizModel>> getHotQuizzes({int limit = 5}) async {
+    // Note: This requires a composite index on (isPublic ASC, totalPlays DESC)
+    try {
+      final snapshot = await _firestore
+          .collection(_quizzesCollection)
+          .where('isPublic', isEqualTo: true)
+          .orderBy('totalPlays', descending: true)
+          .limit(limit)
+          .get();
+
+      return snapshot.docs.map((doc) => QuizModel.fromMap(doc.data())).toList();
+    } catch (e) {
+      print('Error getting hot quizzes: $e');
+      // Fallback: fetch all public and sort client-side (inefficient but works without index)
+      // Only do this if strictly necessary during dev
+      final snapshot = await _firestore
+          .collection(_quizzesCollection)
+          .where('isPublic', isEqualTo: true)
+          .limit(20)
+          .get();
+
+      final quizzes = snapshot.docs
+          .map((doc) => QuizModel.fromMap(doc.data()))
+          .toList();
+
+      quizzes.sort((a, b) => b.totalPlays.compareTo(a.totalPlays));
+      return quizzes.take(limit).toList();
+    }
+  }
+
+  // Retrieves paginated public quizzes ordered by total plays
+  Future<List<QuizModel>> getPaginatedHotQuizzes({
+    int limit = 10,
+    DocumentSnapshot? startAfter,
+  }) async {
+    Query query = _firestore
+        .collection(_quizzesCollection)
+        .where('isPublic', isEqualTo: true)
+        .orderBy('totalPlays', descending: true)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    final snapshot = await query.get();
+    return snapshot.docs
+        .map((doc) => QuizModel.fromMap(doc.data() as Map<String, dynamic>))
+        .toList();
+  }
+
+  // Retrieves paginated public quizzes by category
+  Future<List<QuizModel>> getPaginatedQuizzesByCategoryId(
+    String categoryId, {
+    int limit = 10,
+    DocumentSnapshot? startAfter,
+  }) async {
+    Query query = _firestore
+        .collection(_quizzesCollection)
+        .where('isPublic', isEqualTo: true)
+        .where('categoryIds', arrayContains: categoryId)
+        .orderBy('createdAt', descending: true)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    final snapshot = await query.get();
+    return snapshot.docs
+        .map((doc) => QuizModel.fromMap(doc.data() as Map<String, dynamic>))
+        .toList();
+  }
+
+  // Gets the last document snapshot for pagination
+  Future<DocumentSnapshot?> getLastDocument(List<QuizModel> quizzes) async {
+    if (quizzes.isEmpty) return null;
+    final lastQuiz = quizzes.last;
+    final snapshot = await _firestore
+        .collection(_quizzesCollection)
+        .doc(lastQuiz.id)
+        .get();
+    return snapshot;
+  }
+
+  // Searches public quizzes by title (Prefix and Keyword)
+  Future<List<QuizModel>> searchQuizzes(String query) async {
+    if (query.isEmpty) return [];
+
+    final queryLower = query.toLowerCase();
+
+    // 1. Prefix search: Matches titles starting with query (e.g. "Tiếng" -> "Tiếng Anh")
+    final prefixQuery = _firestore
+        .collection(_quizzesCollection)
+        .where('isPublic', isEqualTo: true)
+        .orderBy('titleLower')
+        .startAt([queryLower])
+        .endAt(['$queryLower\uf8ff'])
+        .limit(20);
+
+    // 2. Keyword search: Matches words containing query (e.g. "ba" -> "Ẩm thực ba miền")
+    // Requires 'keywords' array-contains index
+    final keywordQuery = _firestore
+        .collection(_quizzesCollection)
+        .where('isPublic', isEqualTo: true)
+        .where('keywords', arrayContains: queryLower)
+        .limit(20);
+
+    try {
+      final results = await Future.wait([
+        prefixQuery.get(),
+        keywordQuery.get(),
+      ]);
+
+      // Merge results and remove duplicates
+      final Map<String, QuizModel> uniqueQuizzes = {};
+
+      for (var snapshot in results) {
+        for (var doc in snapshot.docs) {
+          final quiz = QuizModel.fromMap(doc.data());
+          uniqueQuizzes[quiz.id] = quiz;
+        }
+      }
+
+      return uniqueQuizzes.values.toList();
+    } catch (e) {
+      print('Error searching quizzes: $e');
+      // Fallback: client-side search (only if indexes are broken)
+      final snapshot = await _firestore
+          .collection(_quizzesCollection)
+          .where('isPublic', isEqualTo: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => QuizModel.fromMap(doc.data()))
+          .where((quiz) {
+            final title = quiz.titleLower;
+            return title.contains(queryLower);
+          })
+          .take(20)
+          .toList();
+    }
+  }
+
+  // Clones a quiz and its questions for a new owner
+  Future<String> cloneQuiz(QuizModel originalQuiz, String newOwnerId) async {
+    // 1. Create new quiz document
+    final newQuizDoc = _firestore.collection(_quizzesCollection).doc();
+    final newTitle = '${originalQuiz.title} (Copy)';
+    final newKeywords = _generateKeywords(newTitle);
+
+    final newQuiz = originalQuiz.copyWith(
+      id: newQuizDoc.id,
+      ownerId: newOwnerId,
+      title: newTitle,
+      titleLower: newTitle.toLowerCase(),
+      keywords: newKeywords,
+      totalPlays: 0,
+      createdAt: DateTime.now(),
+      isPublic: false, // Default to private when cloning
+    );
+
+    // 2. Get all questions from original quiz
+    final questionsSnapshot = await _firestore
+        .collection(_quizzesCollection)
+        .doc(originalQuiz.id)
+        .collection(_questionsSubCollection)
+        .get();
+
+    final batch = _firestore.batch();
+
+    // Set new quiz data
+    batch.set(newQuizDoc, newQuiz.toMap());
+
+    // Copy questions
+    for (var doc in questionsSnapshot.docs) {
+      final originalQuestion = QuestionModel.fromMap(doc.data());
+      final newQuestionDoc = newQuizDoc
+          .collection(_questionsSubCollection)
+          .doc();
+
+      final newQuestion = originalQuestion.copyWith(id: newQuestionDoc.id);
+
+      batch.set(newQuestionDoc, newQuestion.toMap());
+    }
+
+    await batch.commit();
+    return newQuizDoc.id;
+  }
+}

@@ -1,21 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
 import 'package:quify/routes/app_routes.dart';
 
 /// Controller managing authentication state and user interactions
 class AuthController extends GetxController {
   final AuthRepository _authRepository = AuthRepository();
-  final _storage = GetStorage();
-  static const String _adminLoginKey = 'is_admin_logged_in';
-
+  
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
   final isLoading = false.obs;
+  final isAdmin = false.obs;
   final isPasswordVisible = false.obs;
   final isConfirmPasswordVisible = false.obs;
   final canResendEmail = true.obs;
@@ -24,6 +22,7 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    checkAdminStatus();
   }
 
   @override
@@ -51,42 +50,21 @@ class AuthController extends GetxController {
 
   /// Handles user login with email or username
   /// Validates email verification and profile setup before allowing access
-  /// Admin account (AdminQuify/Quify@123) bypasses Firebase authentication
   Future<void> login() async {
     try {
       isLoading.value = true;
 
-      // Check for admin account - bypass Firebase authentication
       final emailOrUsername = emailController.text.trim();
       final password = passwordController.text.trim();
-
-      // Kiểm tra tài khoản admin (case-insensitive cho username)
-      if (emailOrUsername.toLowerCase() == 'adminquify') {
-        if (password == 'Quify@123') {
-          await _storage.write(_adminLoginKey, true);
-          clearControllers();
-          isLoading.value = false;
-          Get.offAllNamed(AppRoutes.home);
-          return;
-        } else {
-          // Password admin không đúng
-          Get.snackbar(
-            'Lỗi',
-            'Mật khẩu admin không đúng',
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-          isLoading.value = false;
-          return;
-        }
-      }
 
       final credential = await _authRepository.login(emailOrUsername, password);
 
       if (credential?.user != null) {
         await _authRepository.reloadUser();
         final user = credential!.user!;
+        
+        // Check admin status
+        await checkAdminStatus();
 
         if (!user.emailVerified) {
           Get.snackbar(
@@ -386,11 +364,28 @@ class AuthController extends GetxController {
 
   /// Kiểm tra xem có đang đăng nhập bằng tài khoản admin không
   bool isAdminLoggedIn() {
-    return _storage.read(_adminLoginKey) == true;
+    return isAdmin.value;
+  }
+
+  /// Check admin status from custom claims
+  Future<void> checkAdminStatus() async {
+    try {
+      final user = _authRepository.getCurrentUser();
+      if (user != null) {
+        // Force refresh to get latest claims
+        final idTokenResult = await user.getIdTokenResult(true);
+        isAdmin.value = idTokenResult.claims?['admin'] == true;
+      } else {
+        isAdmin.value = false;
+      }
+    } catch (e) {
+      print('Error checking admin status: $e');
+      isAdmin.value = false;
+    }
   }
 
   /// Clear trạng thái admin login
   void clearAdminLogin() {
-    _storage.remove(_adminLoginKey);
+    isAdmin.value = false;
   }
 }

@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_dimens.dart';
+import 'package:quify/features/admin/data/models/category_model.dart';
 import 'package:quify/features/admin/data/providers/category_provider.dart';
 import 'package:quify/features/game/controller/game_controller.dart';
+import 'package:quify/features/quiz/controller/public_quiz_controller.dart';
 import 'package:quify/features/quiz/controller/quiz_controller.dart';
 import 'package:quify/features/quiz/data/models/quiz_model.dart';
 import 'package:quify/features/quiz/data/models/question_model.dart';
@@ -22,8 +24,12 @@ class QuizDetailView extends StatefulWidget {
 class _QuizDetailViewState extends State<QuizDetailView> {
   late Future<QuizModel?> _quizFuture;
   final QuizController _quizController = Get.put(QuizController(), tag: 'quiz');
+  // Inject PublicQuizController for cloning functionality
+  final PublicQuizController _publicQuizController = Get.put(
+    PublicQuizController(),
+  );
   final CategoryProvider _categoryProvider = CategoryProvider();
-  List<Map<String, dynamic>> _categories = [];
+  List<CategoryModel> _categories = [];
   bool _loadingCategories = true;
 
   @override
@@ -51,9 +57,7 @@ class _QuizDetailViewState extends State<QuizDetailView> {
     if (_loadingCategories || _categories.isEmpty) {
       return [];
     }
-    final categoryMap = {
-      for (var cat in _categories) cat['id'] as String: cat['name'] as String
-    };
+    final categoryMap = {for (var cat in _categories) cat.id: cat.name};
     return quiz.categoryIds
         .map((id) => categoryMap[id] ?? id)
         .where((name) => name.isNotEmpty)
@@ -62,7 +66,9 @@ class _QuizDetailViewState extends State<QuizDetailView> {
 
   void _loadQuiz() {
     setState(() {
-      _quizFuture = _quizController.getQuizById(widget.quizId).then((quiz) async {
+      _quizFuture = _quizController.getQuizById(widget.quizId).then((
+        quiz,
+      ) async {
         if (quiz != null) {
           await _quizController.loadQuestions(widget.quizId);
         }
@@ -89,7 +95,10 @@ class _QuizDetailViewState extends State<QuizDetailView> {
                       IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () async {
-                          final result = await Get.toNamed(AppRoutes.editQuiz, arguments: widget.quizId);
+                          final result = await Get.toNamed(
+                            AppRoutes.editQuiz,
+                            arguments: widget.quizId,
+                          );
                           if (result == true || result == null) {
                             _loadQuiz();
                           }
@@ -106,10 +115,14 @@ class _QuizDetailViewState extends State<QuizDetailView> {
                             confirmTextColor: Colors.white,
                             onConfirm: () async {
                               Get.back();
-                              final success = await _quizController.deleteQuiz(widget.quizId);
+                              final success = await _quizController.deleteQuiz(
+                                widget.quizId,
+                              );
                               if (success) {
                                 Get.back();
-                                await Future.delayed(const Duration(milliseconds: 300));
+                                await Future.delayed(
+                                  const Duration(milliseconds: 300),
+                                );
                                 Get.snackbar(
                                   'Thành công',
                                   'Đã xóa quiz',
@@ -134,36 +147,83 @@ class _QuizDetailViewState extends State<QuizDetailView> {
                     ],
                   );
                 }
+                // Show Clone button for non-owners
+                if (snapshot.hasData && snapshot.data?.ownerId != user.uid) {
+                  return Obx(() {
+                    if (_publicQuizController.isCloning.value) {
+                      return const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    }
+                    return IconButton(
+                      icon: const Icon(Icons.copy),
+                      tooltip: 'Clone Quiz',
+                      onPressed: () {
+                        Get.defaultDialog(
+                          title: 'Clone Quiz',
+                          middleText:
+                              'Bạn có muốn sao chép quiz này về thư viện của mình không?',
+                          textConfirm: 'Clone',
+                          textCancel: 'Hủy',
+                          confirmTextColor: Colors.white,
+                          onConfirm: () async {
+                            Get.back();
+                            await _publicQuizController.cloneQuiz(
+                              snapshot.data!,
+                            );
+                          },
+                        );
+                      },
+                    );
+                  });
+                }
                 return const SizedBox.shrink();
               },
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          _quizFuture.then((quiz) {
-            if (quiz != null) {
-              final gameController = Get.put(GameController());
-              gameController.createGame(quiz);
-            }
-          });
+      floatingActionButton: FutureBuilder<QuizModel?>(
+        future: _quizFuture,
+        builder: (context, snapshot) {
+          final user = FirebaseAuth.instance.currentUser;
+          // Only show 'Organize Game' button if user is the owner
+          if (snapshot.hasData && snapshot.data?.ownerId == user?.uid) {
+            return FloatingActionButton.extended(
+              onPressed: () {
+                if (snapshot.data != null) {
+                  final gameController = Get.put(GameController());
+                  gameController.createGame(snapshot.data!);
+                }
+              },
+              label: const Text(
+                "Tổ chức Game",
+                style: TextStyle(color: Colors.white),
+              ),
+              icon: const Icon(Icons.play_arrow, color: Colors.white),
+              backgroundColor: AppTheme.primaryColor,
+            );
+          }
+          return const SizedBox.shrink();
         },
-        label: const Text("Tổ chức Game"),
-        icon: const Icon(Icons.play_arrow),
-        backgroundColor: AppTheme.primaryColor,
       ),
       body: SafeArea(
         child: FutureBuilder<QuizModel?>(
-        future: _quizFuture,
-        builder: (context, quizSnapshot) {
-          if (!quizSnapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          future: _quizFuture,
+          builder: (context, quizSnapshot) {
+            if (!quizSnapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final quiz = quizSnapshot.data!;
-          final categoryNames = _getCategoryNames(quiz);
+            final quiz = quizSnapshot.data!;
+            final categoryNames = _getCategoryNames(quiz);
 
-          return Obx(() => SingleChildScrollView(
+            return Obx(
+              () => SingleChildScrollView(
                 padding: const EdgeInsets.all(AppDimens.paddingM),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,7 +267,8 @@ class _QuizDetailViewState extends State<QuizDetailView> {
                                 children: categoryNames.map((name) {
                                   return Chip(
                                     label: Text(name),
-                                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                                    backgroundColor: AppTheme.primaryColor
+                                        .withOpacity(0.1),
                                     avatar: Icon(
                                       Icons.label_outline,
                                       size: 16,
@@ -255,12 +316,17 @@ class _QuizDetailViewState extends State<QuizDetailView> {
                         ),
                       )
                     else
-                      ..._quizController.questions.map((question) =>
-                          _QuestionCard(question: question, quizId: widget.quizId)),
+                      ..._quizController.questions.map(
+                        (question) => _QuestionCard(
+                          question: question,
+                          quizId: widget.quizId,
+                        ),
+                      ),
                   ],
                 ),
-              ));
-        },
+              ),
+            );
+          },
         ),
       ),
     );
@@ -319,7 +385,9 @@ class _QuestionCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Chip(
-                  label: Text(question.type == 'SINGLE' ? 'Đơn đáp án' : 'Đa đáp án'),
+                  label: Text(
+                    question.type == 'SINGLE' ? 'Đơn đáp án' : 'Đa đáp án',
+                  ),
                   backgroundColor: AppTheme.secondaryColor.withOpacity(0.1),
                 ),
               ],
@@ -327,62 +395,64 @@ class _QuestionCard extends StatelessWidget {
             const SizedBox(height: AppDimens.marginS),
             Text(
               question.text,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: AppDimens.marginS),
+            ...question.options.map(
+              (option) => Padding(
+                padding: const EdgeInsets.only(bottom: AppDimens.marginXS),
+                child: Row(
+                  children: [
+                    Icon(
+                      option.isCorrect
+                          ? Icons.check_circle
+                          : Icons.circle_outlined,
+                      size: 16,
+                      color: option.isCorrect
+                          ? AppTheme.successColor
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(width: AppDimens.marginXS),
+                    Expanded(
+                      child: Text(
+                        option.text,
+                        style: TextStyle(
+                          color: option.isCorrect
+                              ? AppTheme.successColor
+                              : AppTheme.textPrimary,
+                          fontWeight: option.isCorrect
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: AppDimens.marginS),
-            ...question.options.map((option) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppDimens.marginXS),
-                  child: Row(
-                    children: [
-                      Icon(
-                        option.isCorrect ? Icons.check_circle : Icons.circle_outlined,
-                        size: 16,
-                        color: option.isCorrect
-                            ? AppTheme.successColor
-                            : AppTheme.textSecondary,
-                      ),
-                      const SizedBox(width: AppDimens.marginXS),
-                      Expanded(
-                        child: Text(
-                          option.text,
-                          style: TextStyle(
-                            color: option.isCorrect
-                                ? AppTheme.successColor
-                                : AppTheme.textPrimary,
-                            fontWeight:
-                                option.isCorrect ? FontWeight.w600 : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-            const SizedBox(height: AppDimens.marginS),
             Row(
               children: [
-                Icon(Icons.timer_outlined,
-                    size: 14, color: AppTheme.textSecondary),
+                Icon(
+                  Icons.timer_outlined,
+                  size: 14,
+                  color: AppTheme.textSecondary,
+                ),
                 const SizedBox(width: AppDimens.marginXS),
                 Text(
                   '${question.timeLimit}s',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
                 const SizedBox(width: AppDimens.marginM),
-                Icon(Icons.star_outline,
-                    size: 14, color: AppTheme.textSecondary),
+                Icon(
+                  Icons.star_outline,
+                  size: 14,
+                  color: AppTheme.textSecondary,
+                ),
                 const SizedBox(width: AppDimens.marginXS),
                 Text(
                   '${question.points} điểm',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
               ],
             ),
@@ -392,4 +462,3 @@ class _QuestionCard extends StatelessWidget {
     );
   }
 }
-

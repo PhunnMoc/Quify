@@ -4,6 +4,7 @@ import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/utils/validators.dart';
 import 'package:quify/core/values/app_dimens.dart';
 import 'package:quify/core/widgets/custom_input_field.dart';
+import 'package:quify/features/admin/data/models/category_model.dart';
 import 'package:quify/features/admin/data/providers/category_provider.dart';
 import 'package:quify/features/quiz/controller/quiz_controller.dart';
 
@@ -24,7 +25,7 @@ class QuizFormFields extends StatefulWidget {
 }
 
 class _QuizFormFieldsState extends State<QuizFormFields> {
-  List<Map<String, dynamic>> _categories = [];
+  List<CategoryModel> _categories = [];
   bool _loadingCategories = true;
 
   @override
@@ -161,11 +162,11 @@ class _QuizFormFieldsState extends State<QuizFormFields> {
                         widget.quizController.selectedCategories.toList();
 
                     return Wrap(
-                      spacing: AppDimens.marginS,
-                      runSpacing: AppDimens.marginS,
+                      spacing: AppDimens.marginXS,
+                      runSpacing: AppDimens.marginXS,
                       children: _categories.map((category) {
-                        final categoryId = category['id'] as String;
-                        final categoryName = category['name'] as String;
+                        final categoryId = category.id;
+                        final categoryName = category.name;
                         final isSelected = selectedList.contains(categoryId);
                         return FilterChip(
                           label: Text(categoryName),

@@ -5,6 +5,7 @@ import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_strings.dart';
 import 'package:quify/core/values/app_dimens.dart';
 import 'package:quify/features/admin/controller/admin_controller.dart';
+import 'package:quify/features/admin/controller/quiz_generator_controller.dart';
 import 'package:quify/features/auth/controller/auth_controller.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
 import 'package:quify/features/quiz/controller/quiz_controller.dart';
@@ -21,16 +22,11 @@ class _AccountTabState extends State<AccountTab> {
   final authRepository = AuthRepository();
   Map<String, dynamic>? userData;
   bool isLoading = true;
-  AdminController? _adminController;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
-    // Khởi tạo AdminController nếu đang đăng nhập admin
-    if (Get.find<AuthController>().isAdminLoggedIn()) {
-      _adminController = Get.put(AdminController(), tag: 'admin');
-    }
   }
 
   Future<void> _loadUserData() async {
@@ -204,21 +200,46 @@ class _AccountTabState extends State<AccountTab> {
                       },
                     ),
                     // Tạo data - chỉ hiển thị cho admin
-                    if (Get.find<AuthController>().isAdminLoggedIn())
-                      Obx(() {
-                        final adminController = _adminController ??
-                            Get.find<AdminController>(tag: 'admin');
-                        return _buildMenuItem(
-                          icon: Icons.add_circle_outline,
-                          title: 'Tạo data',
-                          onTap: adminController.isLoading.value
-                              ? null
-                              : () {
-                                  adminController.createDefaultCategories();
-                                },
-                          isLoading: adminController.isLoading.value,
-                        );
-                      }),
+                    Obx(() {
+                      final authController = Get.find<AuthController>();
+                      if (!authController.isAdmin.value) return const SizedBox.shrink();
+
+                      // Initialize controllers if needed
+                      if (!Get.isRegistered<AdminController>(tag: 'admin')) {
+                        Get.put(AdminController(), tag: 'admin');
+                      }
+                      final adminController = Get.find<AdminController>(tag: 'admin');
+
+                      if (!Get.isRegistered<QuizGeneratorController>()) {
+                        Get.put(QuizGeneratorController());
+                      }
+                      final quizGenController = Get.find<QuizGeneratorController>();
+
+                      return Column(
+                        children: [
+                          Obx(() => _buildMenuItem(
+                                icon: Icons.category_outlined,
+                                title: 'Tạo danh mục mẫu',
+                                onTap: adminController.isLoading.value
+                                    ? null
+                                    : () {
+                                        adminController.createDefaultCategories();
+                                      },
+                                isLoading: adminController.isLoading.value,
+                              )),
+                          Obx(() => _buildMenuItem(
+                                icon: Icons.quiz_outlined,
+                                title: 'Tạo dữ liệu Quiz (50)',
+                                onTap: quizGenController.isLoading.value
+                                    ? null
+                                    : () {
+                                        quizGenController.generateRandomQuizzes();
+                                      },
+                                isLoading: quizGenController.isLoading.value,
+                              )),
+                        ],
+                      );
+                    }),
                     const SizedBox(height: AppDimens.marginL),
                     // Logout Button
                     Padding(
