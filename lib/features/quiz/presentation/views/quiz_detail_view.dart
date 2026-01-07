@@ -84,14 +84,54 @@ class _QuizDetailViewState extends State<QuizDetailView> {
               future: _quizController.getQuizById(widget.quizId),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data?.ownerId == user.uid) {
-                  return IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () async {
-                      final result = await Get.toNamed(AppRoutes.editQuiz, arguments: widget.quizId);
-                      if (result == true || result == null) {
-                        _loadQuiz();
-                      }
-                    },
+                  return Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () async {
+                          final result = await Get.toNamed(AppRoutes.editQuiz, arguments: widget.quizId);
+                          if (result == true || result == null) {
+                            _loadQuiz();
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          Get.defaultDialog(
+                            title: 'Xóa Quiz',
+                            middleText: 'Bạn có chắc chắn muốn xóa quiz này?',
+                            textConfirm: 'Xóa',
+                            textCancel: 'Hủy',
+                            confirmTextColor: Colors.white,
+                            onConfirm: () async {
+                              Get.back();
+                              final success = await _quizController.deleteQuiz(widget.quizId);
+                              if (success) {
+                                Get.back();
+                                await Future.delayed(const Duration(milliseconds: 300));
+                                Get.snackbar(
+                                  'Thành công',
+                                  'Đã xóa quiz',
+                                  snackPosition: SnackPosition.TOP,
+                                  backgroundColor: Colors.green,
+                                  colorText: Colors.white,
+                                  duration: const Duration(seconds: 2),
+                                );
+                              } else {
+                                Get.snackbar(
+                                  'Lỗi',
+                                  'Không thể xóa quiz',
+                                  snackPosition: SnackPosition.TOP,
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                );
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   );
                 }
                 return const SizedBox.shrink();
@@ -101,7 +141,6 @@ class _QuizDetailViewState extends State<QuizDetailView> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Check if quiz is loaded
           _quizFuture.then((quiz) {
             if (quiz != null) {
               final gameController = Get.put(GameController());
