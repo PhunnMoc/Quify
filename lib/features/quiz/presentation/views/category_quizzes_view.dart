@@ -2,25 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_dimens.dart';
+import 'package:quify/features/admin/data/models/category_model.dart';
 import 'package:quify/features/quiz/controller/public_quiz_controller.dart';
 import 'package:quify/features/quiz/data/models/quiz_model.dart';
 import 'package:quify/routes/app_routes.dart';
 
-class HotQuizzesView extends StatefulWidget {
-  const HotQuizzesView({super.key});
+class CategoryQuizzesView extends StatefulWidget {
+  final CategoryModel category;
+
+  const CategoryQuizzesView({required this.category, super.key});
 
   @override
-  State<HotQuizzesView> createState() => _HotQuizzesViewState();
+  State<CategoryQuizzesView> createState() => _CategoryQuizzesViewState();
 }
 
-class _HotQuizzesViewState extends State<HotQuizzesView> {
-  final PublicQuizController controller = Get.find<PublicQuizController>();
+class _CategoryQuizzesViewState extends State<CategoryQuizzesView> {
   final ScrollController _scrollController = ScrollController();
+  final PublicQuizController _controller = Get.find<PublicQuizController>();
 
   @override
   void initState() {
     super.initState();
-    controller.loadAllHotQuizzes(refresh: true);
+    _controller.loadCategoryQuizzes(widget.category.id, refresh: true);
     _scrollController.addListener(_onScroll);
   }
 
@@ -31,9 +34,9 @@ class _HotQuizzesViewState extends State<HotQuizzesView> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= 
+    if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      controller.loadAllHotQuizzes();
+      _controller.loadCategoryQuizzes(widget.category.id);
     }
   }
 
@@ -41,47 +44,68 @@ class _HotQuizzesViewState extends State<HotQuizzesView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quiz Hot Nhất'),
+        title: Text(widget.category.name),
+        centerTitle: true,
       ),
-      body: Obx(() {
-        if (controller.isLoadingAllHot.value && controller.allHotQuizzes.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _controller.loadCategoryQuizzes(widget.category.id, refresh: true);
+        },
+        child: Obx(() {
+          if (_controller.isLoadingCategoryQuizzes.value &&
+              _controller.categoryQuizzes.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            await controller.loadAllHotQuizzes(refresh: true);
-          },
-          child: ListView.separated(
+          if (_controller.categoryQuizzes.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.quiz_outlined,
+                      size: 64, color: AppTheme.textSecondary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Chưa có quiz nào trong danh mục này',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.separated(
             controller: _scrollController,
             padding: const EdgeInsets.all(AppDimens.paddingM),
-            itemCount: controller.allHotQuizzes.length + (controller.hasMore.value ? 1 : 0),
-            separatorBuilder: (context, index) => const SizedBox(height: AppDimens.marginS),
+            itemCount: _controller.categoryQuizzes.length +
+                (_controller.hasMoreCategoryQuizzes.value ? 1 : 0),
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: AppDimens.marginS),
             itemBuilder: (context, index) {
-              if (index == controller.allHotQuizzes.length) {
+              if (index == _controller.categoryQuizzes.length) {
                 return const Center(
                   child: Padding(
-                    padding: EdgeInsets.all(AppDimens.paddingM),
+                    padding: EdgeInsets.all(8.0),
                     child: CircularProgressIndicator(),
                   ),
                 );
               }
 
-              final quiz = controller.allHotQuizzes[index];
-              return _HotQuizListItem(quiz: quiz, controller: controller);
+              final quiz = _controller.categoryQuizzes[index];
+              return _QuizListItem(quiz: quiz, controller: _controller);
             },
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 }
 
-class _HotQuizListItem extends StatelessWidget {
+class _QuizListItem extends StatelessWidget {
   final QuizModel quiz;
   final PublicQuizController controller;
 
-  const _HotQuizListItem({required this.quiz, required this.controller});
+  const _QuizListItem({required this.quiz, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -95,19 +119,14 @@ class _HotQuizListItem extends StatelessWidget {
           padding: const EdgeInsets.all(AppDimens.paddingM),
           child: Row(
             children: [
-              // Icon or Image placeholder
               Container(
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.quiz,
-                  color: AppTheme.primaryColor,
-                  size: 30,
-                ),
+                child: const Icon(Icons.quiz, color: AppTheme.primaryColor, size: 30),
               ),
               const SizedBox(width: AppDimens.marginM),
               Expanded(
@@ -117,25 +136,17 @@ class _HotQuizListItem extends StatelessWidget {
                     Text(
                       quiz.title,
                       style: const TextStyle(
-                        fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Obx(() => Text(
-                      'Tác giả: ${controller.getAuthorName(quiz.ownerId)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                      ),
-                    )),
-                    const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.play_circle_outline, 
-                          size: 14, color: AppTheme.textSecondary),
+                        Icon(Icons.play_circle_outline,
+                            size: 14, color: AppTheme.textSecondary),
                         const SizedBox(width: 4),
                         Text(
                           '${quiz.totalPlays} lượt chơi',
@@ -145,11 +156,11 @@ class _HotQuizListItem extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(Icons.help_outline, 
-                          size: 14, color: AppTheme.textSecondary),
+                        Icon(Icons.help_outline,
+                            size: 14, color: AppTheme.textSecondary),
                         const SizedBox(width: 4),
                         Text(
-                          '${quiz.totalQuestions} câu',
+                          '${quiz.totalQuestions} câu hỏi',
                           style: TextStyle(
                             fontSize: 12,
                             color: AppTheme.textSecondary,
@@ -157,10 +168,18 @@ class _HotQuizListItem extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 4),
+                    Obx(() => Text(
+                          'Tác giả: ${controller.getAuthorName(quiz.ownerId)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        )),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.grey),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             ],
           ),
         ),

@@ -97,7 +97,7 @@ class QuizGeneratorController extends GetxController {
     try {
       isLoading.value = true;
       final categories = await _categoryProvider.getAllCategories();
-      final categoryIds = categories.map((c) => c['id'] as String).toList();
+      final categoryIds = categories.map((c) => c.id).toList();
       
       if (categoryIds.isEmpty) {
         Get.snackbar('Lỗi', 'Cần có ít nhất 1 danh mục để tạo quiz. Vui lòng tạo danh mục trước.');

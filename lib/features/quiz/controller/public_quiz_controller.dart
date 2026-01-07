@@ -5,20 +5,30 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
 import 'package:quify/features/quiz/data/models/quiz_model.dart';
 import 'package:quify/features/quiz/data/providers/quiz_provider.dart';
+import 'package:quify/features/admin/data/models/category_model.dart';
+import 'package:quify/features/admin/data/providers/category_provider.dart';
 
 // Controller for managing public quizzes, search, and cloning logic
 class PublicQuizController extends GetxController {
   final QuizProvider _quizProvider = QuizProvider();
+  final CategoryProvider _categoryProvider = CategoryProvider();
   final AuthRepository _authRepository = AuthRepository();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // State
   final hotQuizzes = <QuizModel>[].obs;
+  final topCategories = <CategoryModel>[].obs; // Top 10 categories
+  final allCategories = <CategoryModel>[].obs; // For "See All" categories
+  final categoryQuizzes = <QuizModel>[].obs; // For specific category view
+  
   final searchResults = <QuizModel>[].obs;
   final allHotQuizzes = <QuizModel>[].obs; // For the "See All" view
+  
   final isLoadingHot = false.obs;
+  final isLoadingCategories = false.obs;
   final isSearching = false.obs;
   final isLoadingAllHot = false.obs;
+  final isLoadingCategoryQuizzes = false.obs;
   final isCloning = false.obs;
   
   // Cache for author names to reduce Firestore reads
@@ -27,6 +37,11 @@ class PublicQuizController extends GetxController {
   // Pagination for Hot Quizzes View
   DocumentSnapshot? _lastDocument;
   final hasMore = true.obs;
+  
+  // Pagination for Category Quizzes View
+  DocumentSnapshot? _lastCategoryQuizDocument;
+  final hasMoreCategoryQuizzes = true.obs;
+  
   final int _pageSize = 10;
 
   final searchController = TextEditingController();
@@ -38,6 +53,7 @@ class PublicQuizController extends GetxController {
   void onInit() {
     super.onInit();
     loadHotQuizzes();
+    loadTopCategories();
     
     // Listen to text controller changes manually since we can't easily bind it
     searchController.addListener(() {
@@ -69,6 +85,105 @@ class PublicQuizController extends GetxController {
       print('Error loading hot quizzes: $e');
     } finally {
       isLoadingHot.value = false;
+    }
+  }
+
+  // Loads top 10 categories
+  Future<void> loadTopCategories() async {
+    try {
+      final categories = await _categoryProvider.getTopCategories(limit: 10);
+      topCategories.value = categories;
+    } catch (e) {
+      print('Error loading top categories: $e');
+    }
+  }
+
+  // Loads all categories sorted by name
+  Future<void> loadAllCategories() async {
+    try {
+      isLoadingCategories.value = true;
+      var categories = await _categoryProvider.getAllCategories();
+      // Sort by name A-Z (Vietnamese aware)
+      categories.sort((a, b) {
+        return _getVietnameseSortKey(a.name).compareTo(_getVietnameseSortKey(b.name));
+      });
+      allCategories.value = categories;
+    } catch (e) {
+      Get.snackbar('Lỗi', 'Không thể tải danh mục: $e');
+    } finally {
+      isLoadingCategories.value = false;
+    }
+  }
+
+  // Helper to generate sort key for Vietnamese
+  String _getVietnameseSortKey(String text) {
+    String str = text.toLowerCase();
+    
+    // Use chars > 'z' (122) for suffixes to ensure accented comes after plain
+    // { = 123, | = 124, } = 125, ~ = 126
+    
+    // a variants
+    str = str.replaceAll(RegExp(r'[àáảãạ]'), 'a{');
+    str = str.replaceAll(RegExp(r'[ăằắẳẵặ]'), 'a|');
+    str = str.replaceAll(RegExp(r'[âầấẩẫậ]'), 'a}');
+    
+    // d variants
+    str = str.replaceAll('đ', 'd{');
+    
+    // e variants
+    str = str.replaceAll(RegExp(r'[èéẻẽẹ]'), 'e{');
+    str = str.replaceAll(RegExp(r'[êềếểễệ]'), 'e|');
+    
+    // i variants
+    str = str.replaceAll(RegExp(r'[ìíỉĩị]'), 'i{');
+    
+    // o variants
+    str = str.replaceAll(RegExp(r'[òóỏõọ]'), 'o{');
+    str = str.replaceAll(RegExp(r'[ôồốổỗộ]'), 'o|');
+    str = str.replaceAll(RegExp(r'[ơờớởỡợ]'), 'o}');
+    
+    // u variants
+    str = str.replaceAll(RegExp(r'[ùúủũụ]'), 'u{');
+    str = str.replaceAll(RegExp(r'[ưừứửữự]'), 'u|');
+    
+    // y variants
+    str = str.replaceAll(RegExp(r'[ỳýỷỹỵ]'), 'y{');
+    
+    return str;
+  }
+
+  // Loads quizzes for a specific category
+  Future<void> loadCategoryQuizzes(String categoryId, {bool refresh = false}) async {
+    if (refresh) {
+      _lastCategoryQuizDocument = null;
+      categoryQuizzes.clear();
+      hasMoreCategoryQuizzes.value = true;
+    }
+
+    if (!hasMoreCategoryQuizzes.value || isLoadingCategoryQuizzes.value) return;
+
+    try {
+      isLoadingCategoryQuizzes.value = true;
+      
+      final newQuizzes = await _quizProvider.getPaginatedQuizzesByCategoryId(
+        categoryId,
+        limit: _pageSize,
+        startAfter: _lastCategoryQuizDocument,
+      );
+
+      if (newQuizzes.length < _pageSize) {
+        hasMoreCategoryQuizzes.value = false;
+      }
+
+      if (newQuizzes.isNotEmpty) {
+        _lastCategoryQuizDocument = await _quizProvider.getLastDocument(newQuizzes);
+        categoryQuizzes.addAll(newQuizzes);
+        await _fetchAuthorNames(newQuizzes);
+      }
+    } catch (e) {
+      Get.snackbar('Lỗi', 'Không thể tải danh sách quiz: $e');
+    } finally {
+      isLoadingCategoryQuizzes.value = false;
     }
   }
 

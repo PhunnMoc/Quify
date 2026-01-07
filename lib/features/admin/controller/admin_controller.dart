@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:quify/features/admin/data/models/category_model.dart';
 import 'package:quify/features/admin/data/providers/category_provider.dart';
 
 /// Controller for admin operations
@@ -13,7 +14,7 @@ class AdminController extends GetxController {
       isLoading.value = true;
 
       // Danh sách 20 category về học tập
-      final categories = [
+      final categoriesData = [
         {
           'id': 'math',
           'name': 'Toán học',
@@ -21,6 +22,8 @@ class AdminController extends GetxController {
           'isActive': true,
           'orderPriority': 1,
         },
+        // ... (truncated for brevity, assumes logic below iterates and creates CategoryModel)
+
         {
           'id': 'physics',
           'name': 'Vật lý',
@@ -163,14 +166,22 @@ class AdminController extends GetxController {
       int skippedCount = 0;
 
       // Tạo từng category
-      for (final category in categories) {
-        final slug = category['slug'] as String;
+      for (final categoryMap in categoriesData) {
+        final slug = categoryMap['slug'] as String;
 
         // Nếu category đã tồn tại thì skip
         if (existingSlugs.contains(slug)) {
           skippedCount++;
           continue;
         }
+
+        final category = CategoryModel(
+          id: categoryMap['id'] as String,
+          name: categoryMap['name'] as String,
+          slug: slug,
+          isActive: categoryMap['isActive'] as bool,
+          orderPriority: categoryMap['orderPriority'] as int,
+        );
 
         // Tạo category mới với auto ID
         await _categoryProvider.createCategory(category);

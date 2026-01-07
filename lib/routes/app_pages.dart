@@ -16,6 +16,9 @@ import 'package:quify/features/quiz/presentation/views/create_quiz_view.dart';
 import 'package:quify/features/quiz/presentation/views/edit_quiz_view.dart';
 import 'package:quify/features/quiz/presentation/views/quiz_detail_view.dart';
 import 'package:quify/features/quiz/presentation/views/hot_quizzes_view.dart';
+import 'package:quify/features/quiz/presentation/views/all_categories_view.dart';
+import 'package:quify/features/quiz/presentation/views/category_quizzes_view.dart';
+import 'package:quify/features/admin/data/models/category_model.dart';
 import 'package:quify/routes/app_routes.dart';
 
 /// Application route configuration
@@ -79,6 +82,17 @@ class AppPages {
       binding: QuizBinding(),
     ),
     GetPage(name: AppRoutes.hotQuizzes, page: () => const HotQuizzesView()),
+    GetPage(
+      name: AppRoutes.allCategories,
+      page: () => const AllCategoriesView(),
+    ),
+    GetPage(
+      name: AppRoutes.categoryQuizzes,
+      page: () {
+        final category = Get.arguments as CategoryModel;
+        return CategoryQuizzesView(category: category);
+      },
+    ),
     // Game Routes
     GetPage(
       name: AppRoutes.lobby,

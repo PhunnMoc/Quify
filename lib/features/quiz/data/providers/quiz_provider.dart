@@ -28,7 +28,16 @@ class QuizProvider {
 
     final data = quiz.copyWith(id: docRef.id, keywords: keywords).toMap();
 
-    await docRef.set(data);
+    final batch = _firestore.batch();
+    batch.set(docRef, data);
+
+    // Increment totalQuizzes for each category
+    for (final categoryId in quiz.categoryIds) {
+      final categoryRef = _firestore.collection('categories').doc(categoryId);
+      batch.update(categoryRef, {'totalQuizzes': FieldValue.increment(1)});
+    }
+
+    await batch.commit();
     return docRef.id;
   }
 
@@ -325,6 +334,29 @@ class QuizProvider {
         .collection(_quizzesCollection)
         .where('isPublic', isEqualTo: true)
         .orderBy('totalPlays', descending: true)
+        .limit(limit);
+
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    final snapshot = await query.get();
+    return snapshot.docs
+        .map((doc) => QuizModel.fromMap(doc.data() as Map<String, dynamic>))
+        .toList();
+  }
+
+  // Retrieves paginated public quizzes by category
+  Future<List<QuizModel>> getPaginatedQuizzesByCategoryId(
+    String categoryId, {
+    int limit = 10,
+    DocumentSnapshot? startAfter,
+  }) async {
+    Query query = _firestore
+        .collection(_quizzesCollection)
+        .where('isPublic', isEqualTo: true)
+        .where('categoryIds', arrayContains: categoryId)
+        .orderBy('createdAt', descending: true)
         .limit(limit);
 
     if (startAfter != null) {

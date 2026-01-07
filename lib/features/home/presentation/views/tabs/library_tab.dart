@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:quify/core/theme/app_theme.dart';
 import 'package:quify/core/values/app_dimens.dart';
 import 'package:quify/core/values/app_strings.dart';
+import 'package:quify/features/admin/data/models/category_model.dart';
 import 'package:quify/features/admin/data/providers/category_provider.dart';
 import 'package:quify/features/auth/controller/auth_controller.dart';
 import 'package:quify/features/game/controller/game_controller.dart';
@@ -37,7 +38,8 @@ class _LibraryTabState extends State<LibraryTab> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Exit multi-select mode when app goes to background or becomes inactive
-    if ((state == AppLifecycleState.paused || state == AppLifecycleState.inactive) &&
+    if ((state == AppLifecycleState.paused ||
+            state == AppLifecycleState.inactive) &&
         quizController.isMultiSelectionMode.value) {
       quizController.exitSelectionMode();
     }
@@ -50,31 +52,26 @@ class _LibraryTabState extends State<LibraryTab> with WidgetsBindingObserver {
 
     if (authController.isAdminLoggedIn()) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text(AppStrings.library),
-        ),
+        appBar: AppBar(title: const Text(AppStrings.library)),
         body: SafeArea(
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.quiz_outlined,
-                    size: 64, color: AppTheme.textSecondary),
+                Icon(
+                  Icons.quiz_outlined,
+                  size: 64,
+                  color: AppTheme.textSecondary,
+                ),
                 const SizedBox(height: AppDimens.marginM),
                 Text(
                   'Chế độ admin',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 18, color: AppTheme.textSecondary),
                 ),
                 const SizedBox(height: AppDimens.marginS),
                 Text(
                   'Vui lòng đăng nhập bằng tài khoản thường để xem quiz',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -133,12 +130,12 @@ class _LibraryTabState extends State<LibraryTab> with WidgetsBindingObserver {
                   children: [
                     IconButton(
                       icon: Icon(
-                        quizController.isAllSelected 
-                            ? Icons.check_box 
+                        quizController.isAllSelected
+                            ? Icons.check_box
                             : Icons.check_box_outline_blank,
                       ),
-                      tooltip: quizController.isAllSelected 
-                          ? 'Hủy chọn tất cả' 
+                      tooltip: quizController.isAllSelected
+                          ? 'Hủy chọn tất cả'
                           : 'Chọn tất cả',
                       onPressed: () => quizController.toggleSelectAll(),
                     ),
@@ -149,7 +146,8 @@ class _LibraryTabState extends State<LibraryTab> with WidgetsBindingObserver {
                         onPressed: () {
                           Get.defaultDialog(
                             title: 'Xóa Quiz',
-                            middleText: 'Bạn có chắc chắn muốn xóa ${quizController.selectedQuizIds.length} quiz đã chọn?',
+                            middleText:
+                                'Bạn có chắc chắn muốn xóa ${quizController.selectedQuizIds.length} quiz đã chọn?',
                             textConfirm: 'Xóa',
                             textCancel: 'Hủy',
                             confirmTextColor: Colors.white,
@@ -174,8 +172,11 @@ class _LibraryTabState extends State<LibraryTab> with WidgetsBindingObserver {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.quiz_outlined,
-                        size: 64, color: AppTheme.textSecondary),
+                    Icon(
+                      Icons.quiz_outlined,
+                      size: 64,
+                      color: AppTheme.textSecondary,
+                    ),
                     const SizedBox(height: AppDimens.marginM),
                     Text(
                       'Chưa có quiz nào',
@@ -224,7 +225,7 @@ class _QuizCard extends StatefulWidget {
 class _QuizCardState extends State<_QuizCard> {
   final CategoryProvider _categoryProvider = CategoryProvider();
   final QuizController _quizController = Get.find(tag: 'quiz');
-  List<Map<String, dynamic>> _categories = [];
+  List<CategoryModel> _categories = [];
   bool _loadingCategories = true;
 
   @override
@@ -255,9 +256,7 @@ class _QuizCardState extends State<_QuizCard> {
     if (_loadingCategories || _categories.isEmpty) {
       return [];
     }
-    final categoryMap = {
-      for (var cat in _categories) cat['id'] as String: cat['name'] as String
-    };
+    final categoryMap = {for (var cat in _categories) cat.id: cat.name};
     return widget.quiz.categoryIds
         .map((id) => categoryMap[id] ?? id)
         .where((name) => name.isNotEmpty)
@@ -270,7 +269,9 @@ class _QuizCardState extends State<_QuizCard> {
 
     return Obx(() {
       final isSelectionMode = _quizController.isMultiSelectionMode.value;
-      final isSelected = _quizController.selectedQuizIds.contains(widget.quiz.id);
+      final isSelected = _quizController.selectedQuizIds.contains(
+        widget.quiz.id,
+      );
 
       return Card(
         margin: const EdgeInsets.only(bottom: AppDimens.marginM),
@@ -309,8 +310,12 @@ class _QuizCardState extends State<_QuizCard> {
                   children: [
                     if (isSelectionMode) ...[
                       Icon(
-                        isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                        color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
+                        isSelected
+                            ? Icons.check_circle
+                            : Icons.radio_button_unchecked,
+                        color: isSelected
+                            ? AppTheme.primaryColor
+                            : AppTheme.textSecondary,
                       ),
                       const SizedBox(width: AppDimens.marginS),
                     ],
@@ -327,10 +332,13 @@ class _QuizCardState extends State<_QuizCard> {
                     ),
                     if (!isSelectionMode) ...[
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
                         tooltip: 'Xóa quiz',
                         onPressed: () {
-                           Get.defaultDialog(
+                          Get.defaultDialog(
                             title: 'Xóa Quiz',
                             middleText: 'Bạn có chắc chắn muốn xóa quiz này?',
                             textConfirm: 'Xóa',
@@ -338,7 +346,9 @@ class _QuizCardState extends State<_QuizCard> {
                             confirmTextColor: Colors.white,
                             onConfirm: () async {
                               Get.back();
-                              final success = await _quizController.deleteQuiz(widget.quiz.id);
+                              final success = await _quizController.deleteQuiz(
+                                widget.quiz.id,
+                              );
                               if (success) {
                                 Get.snackbar(
                                   'Thành công',
@@ -367,7 +377,7 @@ class _QuizCardState extends State<_QuizCard> {
                         color: AppTheme.textSecondary,
                       ),
                     ] else ...[
-                       Icon(
+                      Icon(
                         widget.quiz.isPublic ? Icons.public : Icons.lock,
                         size: 20,
                         color: AppTheme.textSecondary,
@@ -378,10 +388,7 @@ class _QuizCardState extends State<_QuizCard> {
                 const SizedBox(height: AppDimens.marginS),
                 Text(
                   widget.quiz.description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -392,10 +399,7 @@ class _QuizCardState extends State<_QuizCard> {
                     runSpacing: AppDimens.marginXS,
                     children: categoryNames.map((name) {
                       return Chip(
-                        label: Text(
-                          name,
-                          style: const TextStyle(fontSize: 11),
-                        ),
+                        label: Text(name, style: const TextStyle(fontSize: 11)),
                         backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -408,8 +412,11 @@ class _QuizCardState extends State<_QuizCard> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(Icons.help_outline,
-                        size: AppDimens.iconS, color: AppTheme.textSecondary),
+                    Icon(
+                      Icons.help_outline,
+                      size: AppDimens.iconS,
+                      color: AppTheme.textSecondary,
+                    ),
                     const SizedBox(width: AppDimens.marginXS),
                     Text(
                       '${widget.quiz.totalQuestions} câu hỏi',
@@ -419,8 +426,11 @@ class _QuizCardState extends State<_QuizCard> {
                       ),
                     ),
                     const SizedBox(width: AppDimens.marginL),
-                    Icon(Icons.play_circle_outline,
-                        size: AppDimens.iconS, color: AppTheme.textSecondary),
+                    Icon(
+                      Icons.play_circle_outline,
+                      size: AppDimens.iconS,
+                      color: AppTheme.textSecondary,
+                    ),
                     const SizedBox(width: AppDimens.marginXS),
                     Text(
                       '${widget.quiz.totalPlays} lượt chơi',
@@ -432,7 +442,10 @@ class _QuizCardState extends State<_QuizCard> {
                     const Spacer(),
                     if (!isSelectionMode)
                       IconButton(
-                        icon: const Icon(Icons.play_arrow_rounded, color: AppTheme.primaryColor),
+                        icon: const Icon(
+                          Icons.play_arrow_rounded,
+                          color: AppTheme.primaryColor,
+                        ),
                         iconSize: AppDimens.iconL,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
