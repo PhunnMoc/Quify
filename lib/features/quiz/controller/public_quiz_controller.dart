@@ -55,16 +55,11 @@ class PublicQuizController extends GetxController {
     loadHotQuizzes();
     loadTopCategories();
     
-    // Listen to text controller changes manually since we can't easily bind it
-    searchController.addListener(() {
-      searchQuery.value = searchController.text;
-    });
-
     // Debounce search input
     debounce(
       searchQuery,
       (val) => searchQuizzes(val),
-      time: const Duration(seconds: 1),
+      time: const Duration(milliseconds: 500), // Reduce to 500ms for better responsiveness
     );
   }
 

@@ -24,6 +24,7 @@ class SearchTab extends StatelessWidget {
               padding: const EdgeInsets.all(AppDimens.paddingM),
               child: TextField(
                 controller: controller.searchController,
+                onChanged: (value) => controller.searchQuery.value = value, // Cập nhật trực tiếp
                 decoration: InputDecoration(
                   hintText: 'Tìm kiếm quiz...',
                   prefixIcon: const Icon(Icons.search),
@@ -42,6 +43,7 @@ class SearchTab extends StatelessWidget {
                         icon: const Icon(Icons.clear),
                         onPressed: () {
                           controller.searchController.clear();
+                          controller.searchQuery.value = ''; // Reset biến reactive
                           controller.searchQuizzes('');
                         },
                       );

@@ -421,8 +421,9 @@ class QuizProvider {
 
     try {
       final results = await Future.wait([
-        prefixQuery.get(),
-        keywordQuery.get(),
+        // Force fetch from server to bypass potential cache issues
+        prefixQuery.get(const GetOptions(source: Source.server)),
+        keywordQuery.get(const GetOptions(source: Source.server)),
       ]);
 
       // Merge results and remove duplicates
