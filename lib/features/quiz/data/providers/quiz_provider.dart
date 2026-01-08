@@ -255,8 +255,10 @@ class QuizProvider {
   }
 
   // Deletes multiple quizzes and their questions using batch operations
-  // Firestore batch limit is 500 operations, so we split into multiple batches if needed
+  // Separates question deletion and quiz deletion into different batches
+  // to comply with Firestore security rules (getAfter check)
   Future<void> deleteQuizzes(List<String> quizIds) async {
+    // 1. Delete all questions first
     WriteBatch batch = _firestore.batch();
     int operationCount = 0;
 
@@ -277,7 +279,18 @@ class QuizProvider {
           operationCount = 0;
         }
       }
+    }
 
+    // Commit any remaining question deletions
+    if (operationCount > 0) {
+      await batch.commit();
+    }
+
+    // 2. Delete quizzes
+    batch = _firestore.batch();
+    operationCount = 0;
+
+    for (final quizId in quizIds) {
       batch.delete(_firestore.collection(_quizzesCollection).doc(quizId));
       operationCount++;
 
@@ -288,6 +301,7 @@ class QuizProvider {
       }
     }
 
+    // Commit any remaining quiz deletions
     if (operationCount > 0) {
       await batch.commit();
     }
