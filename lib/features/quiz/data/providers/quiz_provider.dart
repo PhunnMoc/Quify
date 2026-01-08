@@ -394,13 +394,16 @@ class QuizProvider {
     return snapshot;
   }
 
-  // Searches public quizzes by title (Prefix and Keyword)
+  // Searches public quizzes by title (Server-side search)
+  // Note: Requires Firestore Composite Indexes:
+  // 1. Collection: quizzes, Fields: isPublic (ASC) + titleLower (ASC)
+  // 2. Collection: quizzes, Fields: isPublic (ASC) + keywords (Arrays)
   Future<List<QuizModel>> searchQuizzes(String query) async {
     if (query.isEmpty) return [];
 
     final queryLower = query.toLowerCase();
 
-    // 1. Prefix search: Matches titles starting with query (e.g. "Tiếng" -> "Tiếng Anh")
+    // 1. Prefix search: Matches titles starting with query
     final prefixQuery = _firestore
         .collection(_quizzesCollection)
         .where('isPublic', isEqualTo: true)
@@ -409,8 +412,7 @@ class QuizProvider {
         .endAt(['$queryLower\uf8ff'])
         .limit(20);
 
-    // 2. Keyword search: Matches words containing query (e.g. "ba" -> "Ẩm thực ba miền")
-    // Requires 'keywords' array-contains index
+    // 2. Keyword search: Matches exact words in the title
     final keywordQuery = _firestore
         .collection(_quizzesCollection)
         .where('isPublic', isEqualTo: true)
@@ -428,28 +430,21 @@ class QuizProvider {
 
       for (var snapshot in results) {
         for (var doc in snapshot.docs) {
-          final quiz = QuizModel.fromMap(doc.data());
-          uniqueQuizzes[quiz.id] = quiz;
+          try {
+            final quiz = QuizModel.fromMap(doc.data());
+            uniqueQuizzes[quiz.id] = quiz;
+          } catch (e) {
+            print('Error parsing quiz ${doc.id}: $e');
+          }
         }
       }
 
       return uniqueQuizzes.values.toList();
     } catch (e) {
-      print('Error searching quizzes: $e');
-      // Fallback: client-side search (only if indexes are broken)
-      final snapshot = await _firestore
-          .collection(_quizzesCollection)
-          .where('isPublic', isEqualTo: true)
-          .get();
-
-      return snapshot.docs
-          .map((doc) => QuizModel.fromMap(doc.data()))
-          .where((quiz) {
-            final title = quiz.titleLower;
-            return title.contains(queryLower);
-          })
-          .take(20)
-          .toList();
+      print('Error searching quizzes (Server-side): $e');
+      // Return empty list on error instead of falling back to client-side
+      // to respect the constraint.
+      return [];
     }
   }
 
