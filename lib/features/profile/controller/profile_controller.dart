@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quify/features/auth/data/repositories/auth_repository.dart';
 
+import 'package:quify/features/home/controller/home_controller.dart';
+
 class ProfileController extends GetxController {
   final AuthRepository _authRepository = AuthRepository();
 
@@ -110,6 +112,17 @@ class ProfileController extends GetxController {
 
       // Reload user data
       await _loadUserData();
+
+      // Trigger update on HomeTab
+      try {
+        final homeController = Get.find<HomeController>();
+        homeController.shouldReloadUserData.value = true;
+        Future.delayed(const Duration(milliseconds: 100), () {
+          homeController.shouldReloadUserData.value = false;
+        });
+      } catch (e) {
+        // HomeController might not be in memory
+      }
 
       isEditing.value = false;
 

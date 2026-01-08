@@ -321,13 +321,6 @@ class _EditQuizViewState extends State<EditQuizView> {
                                   maxLines: 3,
                                 ),
                                 const SizedBox(height: AppDimens.marginM),
-                                CustomInputField(
-                                  label: 'Link ảnh (tùy chọn)',
-                                  controller: _quizController
-                                      .questionImageUrlController,
-                                  keyboardType: TextInputType.url,
-                                ),
-                                const SizedBox(height: AppDimens.marginM),
                                 Row(
                                   children: [
                                     Expanded(
