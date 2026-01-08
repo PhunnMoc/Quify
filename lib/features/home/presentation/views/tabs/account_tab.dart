@@ -49,17 +49,7 @@ class _AccountTabState extends State<AccountTab> {
     final fullName = userData?['fullName'] ?? 'Người dùng';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.account),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              // TODO: Navigate to notifications
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text(AppStrings.account)),
       body: SafeArea(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -137,106 +127,114 @@ class _AccountTabState extends State<AccountTab> {
                     ),
                     const SizedBox(height: AppDimens.marginL),
                     // General Section
-                    _buildSectionHeader(AppStrings.general),
-                    const SizedBox(height: AppDimens.marginS),
-                    _buildMenuItem(
-                      icon: Icons.payment_outlined,
-                      title: AppStrings.paymentMethods,
-                      onTap: () {
-                        // TODO: Navigate to payment methods
-                      },
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.reviews_outlined,
-                      title: AppStrings.reviews,
-                      onTap: () {
-                        // TODO: Navigate to reviews
-                      },
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.notifications_outlined,
-                      title: AppStrings.notifications,
-                      onTap: () {
-                        // TODO: Navigate to notifications
-                      },
-                    ),
-                    const SizedBox(height: AppDimens.marginL),
+                    // _buildSectionHeader(AppStrings.general),
+                    // const SizedBox(height: AppDimens.marginS),
+                    // _buildMenuItem(
+                    //   icon: Icons.payment_outlined,
+                    //   title: AppStrings.paymentMethods,
+                    //   onTap: () {
+                    //     // TODO: Navigate to payment methods
+                    //   },
+                    // ),
+                    // _buildMenuItem(
+                    //   icon: Icons.reviews_outlined,
+                    //   title: AppStrings.reviews,
+                    //   onTap: () {
+                    //     // TODO: Navigate to reviews
+                    //   },
+                    // ),
+                    // _buildMenuItem(
+                    //   icon: Icons.notifications_outlined,
+                    //   title: AppStrings.notifications,
+                    //   onTap: () {
+                    //     // TODO: Navigate to notifications
+                    //   },
+                    // ),
+                    // const SizedBox(height: AppDimens.marginL),
                     // Others Section
-                    _buildSectionHeader(AppStrings.others),
-                    const SizedBox(height: AppDimens.marginS),
-                    _buildMenuItem(
-                      icon: Icons.settings_outlined,
-                      title: AppStrings.settings,
-                      onTap: () {
-                        // TODO: Navigate to settings
-                      },
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.help_outline,
-                      title: AppStrings.helpCenter,
-                      onTap: () {
-                        // TODO: Navigate to help center
-                      },
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.thumb_up_outlined,
-                      title: AppStrings.rateOurApp,
-                      onTap: () {
-                        // TODO: Navigate to rate app
-                      },
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.description_outlined,
-                      title: AppStrings.termsOfService,
-                      onTap: () {
-                        // TODO: Navigate to terms
-                      },
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.privacy_tip_outlined,
-                      title: AppStrings.privacyPolicy,
-                      onTap: () {
-                        // TODO: Navigate to privacy policy
-                      },
-                    ),
+                    // _buildSectionHeader(AppStrings.others),
+                    // const SizedBox(height: AppDimens.marginS),
+                    // _buildMenuItem(
+                    //   icon: Icons.settings_outlined,
+                    //   title: AppStrings.settings,
+                    //   onTap: () {
+                    //     // TODO: Navigate to settings
+                    //   },
+                    // ),
+                    // _buildMenuItem(
+                    //   icon: Icons.help_outline,
+                    //   title: AppStrings.helpCenter,
+                    //   onTap: () {
+                    //     // TODO: Navigate to help center
+                    //   },
+                    // ),
+                    // _buildMenuItem(
+                    //   icon: Icons.thumb_up_outlined,
+                    //   title: AppStrings.rateOurApp,
+                    //   onTap: () {
+                    //     // TODO: Navigate to rate app
+                    //   },
+                    // ),
+                    // _buildMenuItem(
+                    //   icon: Icons.description_outlined,
+                    //   title: AppStrings.termsOfService,
+                    //   onTap: () {
+                    //     // TODO: Navigate to terms
+                    //   },
+                    // ),
+                    // _buildMenuItem(
+                    //   icon: Icons.privacy_tip_outlined,
+                    //   title: AppStrings.privacyPolicy,
+                    //   onTap: () {
+                    //     // TODO: Navigate to privacy policy
+                    //   },
+                    // ),
                     // Tạo data - chỉ hiển thị cho admin
                     Obx(() {
                       final authController = Get.find<AuthController>();
-                      if (!authController.isAdmin.value) return const SizedBox.shrink();
+                      if (!authController.isAdmin.value)
+                        return const SizedBox.shrink();
 
                       // Initialize controllers if needed
                       if (!Get.isRegistered<AdminController>(tag: 'admin')) {
                         Get.put(AdminController(), tag: 'admin');
                       }
-                      final adminController = Get.find<AdminController>(tag: 'admin');
+                      final adminController = Get.find<AdminController>(
+                        tag: 'admin',
+                      );
 
                       if (!Get.isRegistered<QuizGeneratorController>()) {
                         Get.put(QuizGeneratorController());
                       }
-                      final quizGenController = Get.find<QuizGeneratorController>();
+                      final quizGenController =
+                          Get.find<QuizGeneratorController>();
 
                       return Column(
                         children: [
-                          Obx(() => _buildMenuItem(
-                                icon: Icons.category_outlined,
-                                title: 'Tạo danh mục mẫu',
-                                onTap: adminController.isLoading.value
-                                    ? null
-                                    : () {
-                                        adminController.createDefaultCategories();
-                                      },
-                                isLoading: adminController.isLoading.value,
-                              )),
-                          Obx(() => _buildMenuItem(
-                                icon: Icons.quiz_outlined,
-                                title: 'Tạo dữ liệu Quiz (50)',
-                                onTap: quizGenController.isLoading.value
-                                    ? null
-                                    : () {
-                                        quizGenController.generateRandomQuizzes();
-                                      },
-                                isLoading: quizGenController.isLoading.value,
-                              )),
+                          Obx(
+                            () => _buildMenuItem(
+                              icon: Icons.category_outlined,
+                              title: 'Tạo danh mục mẫu',
+                              onTap: adminController.isLoading.value
+                                  ? null
+                                  : () {
+                                      adminController.createDefaultCategories();
+                                    },
+                              isLoading: adminController.isLoading.value,
+                            ),
+                          ),
+                          Obx(
+                            () => _buildMenuItem(
+                              icon: Icons.quiz_outlined,
+                              title: 'Tạo dữ liệu Quiz (50)',
+                              onTap: quizGenController.isLoading.value
+                                  ? null
+                                  : () {
+                                      quizGenController.generateRandomQuizzes();
+                                    },
+                              isLoading: quizGenController.isLoading.value,
+                            ),
+                          ),
                         ],
                       );
                     }),
@@ -249,7 +247,9 @@ class _AccountTabState extends State<AccountTab> {
                       child: OutlinedButton(
                         onPressed: () async {
                           if (Get.isRegistered<QuizController>(tag: 'quiz')) {
-                            final quizController = Get.find<QuizController>(tag: 'quiz');
+                            final quizController = Get.find<QuizController>(
+                              tag: 'quiz',
+                            );
                             quizController.clearDataAndStopListening();
                           }
 
@@ -273,15 +273,15 @@ class _AccountTabState extends State<AccountTab> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
+  // Widget _buildSectionHeader(String title) {
+  //   return Align(
+  //     alignment: Alignment.centerLeft,
+  //     child: Text(
+  //       title,
+  //       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  //     ),
+  //   );
+  // }
 
   Widget _buildMenuItem({
     required IconData icon,

@@ -88,13 +88,6 @@ class _QuizFormFieldsState extends State<QuizFormFields> {
           prefixIcon: const Icon(Icons.description),
         ),
         const SizedBox(height: AppDimens.marginM),
-        CustomInputField(
-          label: 'Link ảnh bìa (tùy chọn)',
-          controller: widget.quizController.coverImageUrlController,
-          keyboardType: TextInputType.url,
-          prefixIcon: const Icon(Icons.image),
-        ),
-        const SizedBox(height: AppDimens.marginM),
         Obx(
           () => Card(
             child: SwitchListTile(
